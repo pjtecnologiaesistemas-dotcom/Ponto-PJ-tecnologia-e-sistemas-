@@ -106,6 +106,26 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .pj-footer-brand{font-size:11px; font-weight:800; letter-spacing:.4px; color:var(--muted); text-transform:uppercase;}
 .pj-footer-brand b{color:#3ecbf5; font-weight:800;}
 .pj-footer-tag{font-size:9px; letter-spacing:.6px; color:var(--muted-dim); text-transform:uppercase;}
+
+/* ── Tela de login profissional ── */
+.login-shell{width:100%; display:flex; flex-direction:column; gap:14px;}
+.login-card{position:relative; overflow:hidden;}
+.login-card::before{content:''; position:absolute; top:-60%; right:-30%; width:220px; height:220px; background:radial-gradient(circle, rgba(0,200,248,.14), transparent 70%); pointer-events:none;}
+.login-head{margin-bottom:4px;}
+.login-head h2{font-size:19px;}
+.login-head p{margin-top:2px;}
+.login-links{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
+.link-btn{background:none; border:none; color:#3ecbf5; font-size:12.5px; font-weight:700; letter-spacing:.2px; cursor:pointer; padding:4px 2px;}
+.link-btn:hover{text-decoration:underline;}
+.login-links-sep{color:var(--muted-dim); font-size:12px;}
+.login-advanced{width:100%; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:2px 16px;}
+.login-advanced summary{list-style:none; cursor:pointer; padding:12px 0; font-size:11.5px; letter-spacing:.5px; text-transform:uppercase; color:var(--muted-dim); font-weight:700;}
+.login-advanced summary::-webkit-details-marker{display:none;}
+.login-advanced summary::after{content:'▾'; float:right; color:var(--muted-dim);}
+.login-advanced[open] summary::after{content:'▴';}
+.login-advanced .btn-ghost{width:100%; margin-bottom:12px;}
+.cred-box{margin-top:14px; padding:14px 16px; border-radius:12px; background:var(--bg2); border:1px solid var(--line);}
+.cred-box .info-row b{color:#3ecbf5; font-size:15px; letter-spacing:1px;}
 </style>
 </head>
 <body>
@@ -134,17 +154,31 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 
 <!-- ===================== LOGIN ===================== -->
 <div id="viewLogin" class="wrap center-screen">
-  <div class="card" style="width:100%">
-    <h2>Entrar</h2>
-    <p class="small">Informe matrícula e senha para registrar o ponto.</p>
-    <label>Matrícula</label>
-    <input id="loginMat" placeholder="Ex: 0231 ou admin">
-    <label>Senha</label>
-    <input id="loginSenha" type="password" placeholder="••••••">
-    <button class="btn-main" onclick="doLogin()">Entrar</button>
-    <div class="err" id="loginErr"></div>
-    <button class="btn-ghost" onclick="toggleFirstRun()">Primeiro uso · configurar Firebase</button>
-    <button class="btn-ghost" onclick="iniciarModoOffline()">🧪 Testar offline (dados de exemplo)</button>
+  <div class="login-shell">
+    <div class="card login-card">
+      <div class="login-head">
+        <h2>Acessar o sistema</h2>
+        <p class="small">Informe sua matrícula (CPF) e senha para registrar o ponto.</p>
+      </div>
+      <label>Matrícula</label>
+      <input id="loginMat" placeholder="CPF ou admin">
+      <label>Senha</label>
+      <input id="loginSenha" type="password" placeholder="••••••">
+      <button class="btn-main" onclick="doLogin()">Entrar</button>
+      <div class="err" id="loginErr"></div>
+
+      <div class="login-links">
+        <button class="link-btn" onclick="abrirPrimeiroCadastro()">Primeiro cadastro</button>
+        <span class="login-links-sep">·</span>
+        <button class="link-btn" onclick="abrirRecuperarSenha()">Esqueci minha senha</button>
+      </div>
+    </div>
+
+    <details class="login-advanced">
+      <summary>Opções avançadas</summary>
+      <button class="btn-ghost" onclick="toggleFirstRun()">Primeiro uso · configurar Firebase</button>
+      <button class="btn-ghost" onclick="iniciarModoOffline()">🧪 Testar offline (dados de exemplo)</button>
+    </details>
   </div>
 
   <div id="firstRunBox" class="card hidden" style="width:100%">
@@ -162,6 +196,85 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
       <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
       <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
     </div>
+  </div>
+</div>
+
+<!-- ===================== PRIMEIRO CADASTRO ===================== -->
+<div id="modalPrimeiroCadastro" class="modal-bg hidden" onclick="if(event.target===this) fecharPrimeiroCadastro()">
+  <div class="card" style="max-width:420px;">
+    <button class="close-x" onclick="fecharPrimeiroCadastro()">✕</button>
+    <h2>Primeiro cadastro</h2>
+    <p class="small">Seu usuário e senha de acesso são gerados automaticamente a partir do seu CPF.</p>
+
+    <div id="pcForm">
+      <label>Nome completo</label>
+      <input id="pcNome" placeholder="Nome completo">
+      <label>CPF</label>
+      <input id="pcCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="mascaraCPF(this)">
+      <label>Telefone</label>
+      <input id="pcTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" oninput="mascaraTelefone(this)">
+      <label>Endereço</label>
+      <input id="pcEndereco" placeholder="Rua, número, bairro, cidade">
+      <label>Estado civil</label>
+      <select id="pcEstadoCivil">
+        <option value="">Selecione</option>
+        <option value="Solteiro(a)">Solteiro(a)</option>
+        <option value="Casado(a)">Casado(a)</option>
+        <option value="União estável">União estável</option>
+        <option value="Divorciado(a)">Divorciado(a)</option>
+        <option value="Viúvo(a)">Viúvo(a)</option>
+      </select>
+      <label>Posto</label>
+      <select id="pcPosto"></select>
+      <button class="btn-main" onclick="realizarPrimeiroCadastro()">Cadastrar</button>
+      <div class="err" id="pcErr"></div>
+    </div>
+
+    <div id="pcSucesso" class="cred-box hidden">
+      <p class="small" style="margin-bottom:8px;">Cadastro realizado! Seu usuário e senha temporária:</p>
+      <div class="info-row"><span>Usuário</span><b id="pcUserGerado">—</b></div>
+      <div class="info-row"><span>Senha temporária</span><b id="pcSenhaGerada">—</b></div>
+      <p class="small" style="margin-top:8px;">No primeiro acesso, o sistema vai pedir para você criar sua própria senha.</p>
+      <button class="btn-main" onclick="fecharPrimeiroCadastro()">Ir para o login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== RECUPERAR SENHA ===================== -->
+<div id="modalRecuperarSenha" class="modal-bg hidden" onclick="if(event.target===this) fecharRecuperarSenha()">
+  <div class="card" style="max-width:420px;">
+    <button class="close-x" onclick="fecharRecuperarSenha()">✕</button>
+    <h2>Recuperar senha</h2>
+    <p class="small">Informe seu CPF. Você receberá uma senha temporária e criará uma nova senha no próximo acesso.</p>
+
+    <div id="rsForm">
+      <label>CPF</label>
+      <input id="rsCpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="mascaraCPF(this)">
+      <button class="btn-main" onclick="realizarRecuperarSenha()">Recuperar senha</button>
+      <div class="err" id="rsErr"></div>
+    </div>
+
+    <div id="rsSucesso" class="cred-box hidden">
+      <p class="small" style="margin-bottom:8px;">Senha temporária gerada:</p>
+      <div class="info-row"><span>Usuário</span><b id="rsUserGerado">—</b></div>
+      <div class="info-row"><span>Senha temporária</span><b id="rsSenhaGerada">—</b></div>
+      <p class="small" style="margin-top:8px;">No próximo acesso, o sistema vai pedir para você criar uma nova senha.</p>
+      <button class="btn-main" onclick="fecharRecuperarSenha()">Ir para o login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DEFINIR NOVA SENHA (obrigatório no 1º acesso) ===================== -->
+<div id="modalNovaSenha" class="modal-bg hidden">
+  <div class="card" style="max-width:420px;">
+    <h2>Crie sua senha de acesso</h2>
+    <p class="small">Por segurança, defina uma nova senha pessoal antes de continuar. Sua senha temporária não poderá mais ser usada.</p>
+    <label>Nova senha</label>
+    <input id="nsSenha1" type="password" placeholder="Mínimo 4 caracteres">
+    <label>Confirmar nova senha</label>
+    <input id="nsSenha2" type="password" placeholder="Repita a nova senha">
+    <button class="btn-main" onclick="confirmarNovaSenha()">Salvar e entrar</button>
+    <div class="err" id="nsErr"></div>
   </div>
 </div>
 
@@ -298,9 +411,21 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
       </div>
       <div class="grid2">
         <div><label>Nome</label><input id="novoNome"></div>
-        <div><label>Matrícula</label><input id="novoMat"></div>
+        <div><label>Matrícula (CPF)</label><input id="novoMat"></div>
         <div><label>Senha</label><input id="novoSenha" type="password" placeholder="Deixe em branco p/ manter"></div>
         <div><label>Cargo</label><input id="novoCargo" placeholder="Vigilante, Supervisor..."></div>
+        <div><label>Telefone</label><input id="novoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" oninput="mascaraTelefone(this)"></div>
+        <div><label>Estado civil</label>
+          <select id="novoEstadoCivil">
+            <option value="">Selecione</option>
+            <option value="Solteiro(a)">Solteiro(a)</option>
+            <option value="Casado(a)">Casado(a)</option>
+            <option value="União estável">União estável</option>
+            <option value="Divorciado(a)">Divorciado(a)</option>
+            <option value="Viúvo(a)">Viúvo(a)</option>
+          </select>
+        </div>
+        <div style="grid-column:1/3;"><label>Endereço</label><input id="novoEndereco" placeholder="Rua, número, bairro, cidade"></div>
         <div style="grid-column:1/3;"><label>Posto</label><select id="novoPosto"></select></div>
       </div>
       <button class="btn-main" id="btnSalvarColab" onclick="criarColaborador()">Cadastrar</button>
@@ -551,7 +676,8 @@ function loadGlobalData(){
    LOGIN / SESSÃO
    ============================================================ */
 function doLogin(){
-  const mat = document.getElementById('loginMat').value.trim();
+  const matDigitado = document.getElementById('loginMat').value.trim();
+  const mat = matDigitado.toLowerCase()==='admin' ? 'admin' : somenteDigitosCPF(matDigitado) || matDigitado;
   const senha = document.getElementById('loginSenha').value;
   const errEl = document.getElementById('loginErr');
   errEl.textContent='';
@@ -579,6 +705,7 @@ function doLogin(){
     const id = Object.keys(val)[0];
     const c = val[id];
     if(c.senha !== senha){ errEl.textContent='Senha incorreta.'; return; }
+    if(c.senhaTemporaria){ exigirNovaSenha(id, c); return; }
     currentUser = {tipo:'colaborador', id, ...c};
     localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
     enterApp();
@@ -591,6 +718,135 @@ function logout(){
   document.getElementById('viewColab').classList.add('hidden');
   document.getElementById('viewAdmin').classList.add('hidden');
   document.getElementById('viewLogin').classList.remove('hidden');
+}
+
+/* ============================================================
+   PRIMEIRO CADASTRO / RECUPERAR SENHA (usuário = CPF, senha temporária = 6 primeiros dígitos)
+   ============================================================ */
+function mascaraCPF(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  el.value = v;
+}
+function mascaraTelefone(el){
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>10) v = v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else v = v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+  el.value = v.trim();
+}
+function somenteDigitosCPF(v){ return (v||'').replace(/\D/g,''); }
+function validarCPF(cpf){
+  cpf = somenteDigitosCPF(cpf);
+  if(cpf.length!==11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let soma=0;
+  for(let i=0;i<9;i++) soma += parseInt(cpf[i])*(10-i);
+  let resto = (soma*10)%11; if(resto>=10) resto=0;
+  if(resto!==parseInt(cpf[9])) return false;
+  soma=0;
+  for(let i=0;i<10;i++) soma += parseInt(cpf[i])*(11-i);
+  resto = (soma*10)%11; if(resto>=10) resto=0;
+  return resto===parseInt(cpf[10]);
+}
+function senhaPadraoDoCPF(cpf){ return somenteDigitosCPF(cpf).slice(0,6); }
+
+function abrirPrimeiroCadastro(){
+  document.getElementById('pcForm').classList.remove('hidden');
+  document.getElementById('pcSucesso').classList.add('hidden');
+  ['pcNome','pcCpf','pcTelefone','pcEndereco'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pcEstadoCivil').value='';
+  document.getElementById('pcErr').textContent='';
+  fillPostoSelect();
+  document.getElementById('modalPrimeiroCadastro').classList.remove('hidden');
+}
+function fecharPrimeiroCadastro(){ document.getElementById('modalPrimeiroCadastro').classList.add('hidden'); }
+
+function realizarPrimeiroCadastro(){
+  const errEl = document.getElementById('pcErr');
+  errEl.textContent='';
+  if(!db){ errEl.textContent='Sistema não conectado ao banco de dados.'; return; }
+  const nome = document.getElementById('pcNome').value.trim();
+  const cpfRaw = document.getElementById('pcCpf').value;
+  const telefone = document.getElementById('pcTelefone').value.trim();
+  const endereco = document.getElementById('pcEndereco').value.trim();
+  const estadoCivil = document.getElementById('pcEstadoCivil').value;
+  const postoId = document.getElementById('pcPosto').value;
+  const cpf = somenteDigitosCPF(cpfRaw);
+  if(!nome){ errEl.textContent='Informe seu nome completo.'; return; }
+  if(!validarCPF(cpf)){ errEl.textContent='CPF inválido. Confira os números digitados.'; return; }
+  if(!telefone){ errEl.textContent='Informe seu telefone.'; return; }
+  if(!endereco){ errEl.textContent='Informe seu endereço.'; return; }
+  if(!estadoCivil){ errEl.textContent='Selecione seu estado civil.'; return; }
+  if(!postoId){ errEl.textContent='Selecione seu posto de trabalho.'; return; }
+
+  db.ref('colaboradores').orderByChild('matricula').equalTo(cpf).once('value').then(snap=>{
+    if(snap.val()){ errEl.textContent='Este CPF já possui cadastro. Use "Esqueci minha senha" ou fale com o administrador.'; return; }
+    const senha = senhaPadraoDoCPF(cpf);
+    db.ref('colaboradores').push({nome, matricula:cpf, senha, senhaTemporaria:true, cargo:'', postoId, foto:null, telefone, endereco, estadoCivil}).then(()=>{
+      document.getElementById('pcForm').classList.add('hidden');
+      document.getElementById('pcUserGerado').textContent = cpf;
+      document.getElementById('pcSenhaGerada').textContent = senha;
+      document.getElementById('pcSucesso').classList.remove('hidden');
+    });
+  });
+}
+
+function abrirRecuperarSenha(){
+  document.getElementById('rsForm').classList.remove('hidden');
+  document.getElementById('rsSucesso').classList.add('hidden');
+  document.getElementById('rsCpf').value='';
+  document.getElementById('rsErr').textContent='';
+  document.getElementById('modalRecuperarSenha').classList.remove('hidden');
+}
+function fecharRecuperarSenha(){ document.getElementById('modalRecuperarSenha').classList.add('hidden'); }
+
+function realizarRecuperarSenha(){
+  const errEl = document.getElementById('rsErr');
+  errEl.textContent='';
+  if(!db){ errEl.textContent='Sistema não conectado ao banco de dados.'; return; }
+  const cpf = somenteDigitosCPF(document.getElementById('rsCpf').value);
+  if(!validarCPF(cpf)){ errEl.textContent='CPF inválido. Confira os números digitados.'; return; }
+
+  db.ref('colaboradores').orderByChild('matricula').equalTo(cpf).once('value').then(snap=>{
+    const val = snap.val();
+    if(!val){ errEl.textContent='CPF não encontrado. Verifique ou realize o primeiro cadastro.'; return; }
+    const id = Object.keys(val)[0];
+    const senha = senhaPadraoDoCPF(cpf);
+    db.ref('colaboradores/'+id).update({senha, senhaTemporaria:true}).then(()=>{
+      document.getElementById('rsForm').classList.add('hidden');
+      document.getElementById('rsUserGerado').textContent = cpf;
+      document.getElementById('rsSenhaGerada').textContent = senha;
+      document.getElementById('rsSucesso').classList.remove('hidden');
+    });
+  });
+}
+
+/* ── Forçar criação de senha própria no primeiro acesso ── */
+let pendingLoginUser = null; // {id, ...colaborador} aguardando definir nova senha
+
+function exigirNovaSenha(id, c){
+  pendingLoginUser = {id, ...c};
+  document.getElementById('nsSenha1').value='';
+  document.getElementById('nsSenha2').value='';
+  document.getElementById('nsErr').textContent='';
+  document.getElementById('modalNovaSenha').classList.remove('hidden');
+}
+
+function confirmarNovaSenha(){
+  const errEl = document.getElementById('nsErr');
+  errEl.textContent='';
+  const s1 = document.getElementById('nsSenha1').value;
+  const s2 = document.getElementById('nsSenha2').value;
+  if(!s1 || s1.length<4){ errEl.textContent='A senha deve ter no mínimo 4 caracteres.'; return; }
+  if(s1!==s2){ errEl.textContent='As senhas não conferem.'; return; }
+  if(!pendingLoginUser) return;
+  db.ref('colaboradores/'+pendingLoginUser.id).update({senha:s1, senhaTemporaria:false}).then(()=>{
+    currentUser = {tipo:'colaborador', id:pendingLoginUser.id, ...pendingLoginUser, senha:s1, senhaTemporaria:false};
+    localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
+    document.getElementById('modalNovaSenha').classList.add('hidden');
+    pendingLoginUser = null;
+    toast('Senha criada com sucesso.');
+    enterApp();
+  });
 }
 
 function enterApp(){
@@ -952,9 +1208,11 @@ function exportarCSV(){
    ADMIN — COLABORADORES
    ============================================================ */
 function fillPostoSelect(){
+  const opts = Object.entries(postosCache).map(([id,p])=>`<option value="${id}">${p.nome}</option>`).join('') || '<option value="">Cadastre um posto primeiro</option>';
   const sel = document.getElementById('novoPosto');
-  if(!sel) return;
-  sel.innerHTML = Object.entries(postosCache).map(([id,p])=>`<option value="${id}">${p.nome}</option>`).join('') || '<option value="">Cadastre um posto primeiro</option>';
+  if(sel) sel.innerHTML = opts;
+  const selPc = document.getElementById('pcPosto');
+  if(selPc) selPc.innerHTML = opts;
 }
 function fillFiltroColab(){
   const sel = document.getElementById('filtroColab');
@@ -1012,13 +1270,18 @@ function criarColaborador(){
   const senha = document.getElementById('novoSenha').value;
   const cargo = document.getElementById('novoCargo').value.trim();
   const postoId = document.getElementById('novoPosto').value;
+  const telefone = document.getElementById('novoTelefone').value.trim();
+  const endereco = document.getElementById('novoEndereco').value.trim();
+  const estadoCivil = document.getElementById('novoEstadoCivil').value;
   const foto = colabFotoData || null;
   const errEl = document.getElementById('colabErr');
 
   if(editandoColabId){
     if(!nome||!matricula){ errEl.textContent='Preencha nome e matrícula.'; return; }
-    const senhaFinal = senha ? senha : (colabCache[editandoColabId]?.senha || '');
-    db.ref('colaboradores/'+editandoColabId).set({nome,matricula,senha:senhaFinal,cargo,postoId,foto}).then(()=>{
+    const existente = colabCache[editandoColabId] || {};
+    const senhaFinal = senha ? senha : (existente.senha || '');
+    const senhaTemporaria = senha ? false : (existente.senhaTemporaria || false);
+    db.ref('colaboradores/'+editandoColabId).set({...existente, nome,matricula,senha:senhaFinal,senhaTemporaria,cargo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
       errEl.textContent='';
       toast('Colaborador atualizado.');
       cancelarEdicaoColab();
@@ -1027,9 +1290,10 @@ function criarColaborador(){
   }
 
   if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
-  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId,foto}).then(()=>{
+  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
     errEl.textContent='';
-    ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
+    ['novoNome','novoMat','novoSenha','novoCargo','novoTelefone','novoEndereco'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('novoEstadoCivil').value='';
     colabFotoData = null;
     renderColabFotoPreview();
     toast('Colaborador cadastrado.');
@@ -1045,6 +1309,9 @@ function editarColaborador(id){
   document.getElementById('novoSenha').value = '';
   document.getElementById('novoCargo').value = c.cargo||'';
   document.getElementById('novoPosto').value = c.postoId||'';
+  document.getElementById('novoTelefone').value = c.telefone||'';
+  document.getElementById('novoEndereco').value = c.endereco||'';
+  document.getElementById('novoEstadoCivil').value = c.estadoCivil||'';
   colabFotoData = c.foto || null;
   renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Editando: ' + c.nome;
@@ -1056,8 +1323,9 @@ function editarColaborador(id){
 
 function cancelarEdicaoColab(){
   editandoColabId = null;
-  ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
+  ['novoNome','novoMat','novoSenha','novoCargo','novoTelefone','novoEndereco'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('novoPosto').value='';
+  document.getElementById('novoEstadoCivil').value='';
   colabFotoData = null;
   renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Novo colaborador';
