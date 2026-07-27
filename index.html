@@ -10,12 +10,12 @@
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 :root{
-  --bg:#0a0f16; --bg2:#0d141d; --panel:#131c27; --panel2:#1a2531;
-  --line:#26333f; --line-soft:#1c2732; --text:#eef3f7; --muted:#8798a8; --muted-dim:#5f7286;
+  --bg:#05080c; --bg2:#0a0f16; --panel:#1a2531; --panel2:#22303e;
+  --line:#324656; --line-soft:#233241; --text:#f4f8fb; --muted:#9fb0c0; --muted-dim:#68798a;
   --accent:#f5a623; --accent2:#ff7a3d; --accent-soft:#3a2a12;
   --ok:#2fbf82; --ok-soft:#0f2a20; --warn:#ef4a56; --warn-soft:#301315; --info:#4aa8e0; --info-soft:#102734;
   --radius:16px; --radius-sm:10px;
-  --shadow:0 10px 30px -12px rgba(0,0,0,.55);
+  --shadow:0 12px 34px -14px rgba(0,0,0,.7);
   font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -30,7 +30,7 @@ body{margin:0; background:
 .brand h1 b{color:var(--text); font-weight:800;}
 .wrap{max-width:480px; margin:0 auto; padding:10px 16px 48px;}
 .wrap.wide{max-width:980px;}
-.card{background:linear-gradient(180deg,var(--panel),var(--panel) 60%,var(--bg2)); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:14px; box-shadow:var(--shadow);}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:14px; box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,.03) inset;}
 .hidden{display:none !important;}
 label{display:block; font-size:11px; color:var(--muted-dim); margin:14px 0 7px; text-transform:uppercase; letter-spacing:.7px; font-weight:700;}
 input,select{width:100%; padding:13px 14px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--bg2); color:var(--text); font-size:15px; transition:border-color .15s ease, box-shadow .15s ease;}
@@ -68,17 +68,21 @@ video,canvas{width:100%; border-radius:12px; background:#000;}
 .cam-status{position:absolute; bottom:8px; left:8px; right:8px; text-align:center; font-size:12px; padding:7px; border-radius:8px; background:rgba(5,8,12,.72); font-weight:600; backdrop-filter:blur(2px);}
 table{width:100%; border-collapse:collapse; font-size:13px;}
 th,td{padding:11px 10px; text-align:left; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
-th{color:var(--muted-dim); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; position:sticky; top:0; background:var(--panel); border-bottom:1px solid var(--line);}
+th{color:var(--muted-dim); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; position:sticky; top:0; background:var(--panel2); border-bottom:1px solid var(--line);}
 tbody tr:hover{background:rgba(255,255,255,.02);}
 tbody tr:nth-child(even){background:rgba(255,255,255,.012);}
-.table-scroll{overflow-x:auto; max-height:60vh; overflow-y:auto; border-radius:var(--radius-sm); border:1px solid var(--line-soft);}
+.table-scroll{overflow-x:auto; max-height:60vh; overflow-y:auto; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--bg2);}
 .tabs{display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px;}
-.tab{padding:10px 16px; border-radius:var(--radius-sm); background:var(--panel); border:1px solid var(--line); color:var(--muted); font-size:13px; font-weight:600; white-space:nowrap; transition:all .15s ease;}
+.tab{padding:10px 16px; border-radius:var(--radius-sm); background:var(--panel2); border:1px solid var(--line); color:var(--muted); font-size:13px; font-weight:600; white-space:nowrap; transition:all .15s ease;}
 .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#1a1206; border-color:transparent; box-shadow:0 6px 16px -6px rgba(245,166,35,.5);}
 .kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px;}
-.kpi .box{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
-.kpi .box b{display:block; font-size:24px; font-weight:800; letter-spacing:-.3px;}
-.kpi .box span{font-size:10.5px; color:var(--muted-dim); text-transform:uppercase; letter-spacing:.5px; font-weight:700;}
+.kpi .box{background:var(--panel2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; padding:16px; box-shadow:var(--shadow);}
+.kpi .box b{display:block; font-size:26px; font-weight:800; letter-spacing:-.3px;}
+.kpi .box span{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700;}
+.kpi-info{border-left-color:var(--info) !important;} .kpi-info b{color:var(--info);}
+.kpi-accent{border-left-color:var(--accent) !important;} .kpi-accent b{color:var(--accent);}
+.kpi-warn{border-left-color:var(--warn) !important;} .kpi-warn b{color:#ff8b92;}
+.kpi-ok{border-left-color:var(--ok) !important;} .kpi-ok b{color:var(--ok);}
 .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--line); padding:13px 20px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; z-index:99; box-shadow:0 12px 30px -8px rgba(0,0,0,.6); max-width:90%; text-align:center;}
 .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%; display:inline-block; animation:sp .7s linear infinite; vertical-align:-3px;}
 @keyframes sp{to{transform:rotate(360deg);}}
@@ -201,10 +205,10 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 
   <div id="tabDash" class="tabcontent">
     <div class="kpi">
-      <div class="box"><b id="kpiColab">0</b><span>Colaboradores</span></div>
-      <div class="box"><b id="kpiHoje">0</b><span>Registros hoje</span></div>
-      <div class="box"><b id="kpiForaCerca">0</b><span>Fora da cerca (7d)</span></div>
-      <div class="box"><b id="kpiExtras">0h00</b><span>Horas extras (mês)</span></div>
+      <div class="box kpi-info"><b id="kpiColab">0</b><span>Colaboradores</span></div>
+      <div class="box kpi-accent"><b id="kpiHoje">0</b><span>Registros hoje</span></div>
+      <div class="box kpi-warn"><b id="kpiForaCerca">0</b><span>Fora da cerca (7d)</span></div>
+      <div class="box kpi-ok"><b id="kpiExtras">0h00</b><span>Horas extras (mês)</span></div>
     </div>
     <div class="card">
       <h3>Atividade recente</h3>
