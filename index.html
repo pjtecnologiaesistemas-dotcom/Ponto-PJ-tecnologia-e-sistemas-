@@ -108,15 +108,12 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .pj-footer-tag{font-size:9px; letter-spacing:.6px; color:var(--muted-dim); text-transform:uppercase;}
 
 /* ── Tela de login profissional ── */
-#viewLogin{min-height:100dvh; padding:0; max-width:none; display:flex; align-items:center; justify-content:center;}
-.login-outer{width:100%; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px 18px; position:relative; overflow:hidden;}
+#viewLogin{min-height:calc(100dvh - 72px); padding:0; max-width:none; display:flex; align-items:center; justify-content:center;}
+.login-outer{width:100%; min-height:calc(100dvh - 72px); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px 18px; position:relative; overflow:hidden;}
 .login-outer::before{content:''; position:absolute; inset:0; background:
     radial-gradient(700px 420px at 12% -6%, rgba(245,166,35,.09) 0%, transparent 60%),
     radial-gradient(820px 560px at 88% 4%, rgba(0,200,248,.08) 0%, transparent 55%);
   pointer-events:none;}
-.login-brand-top{display:flex; align-items:center; gap:12px; margin-bottom:26px; position:relative; z-index:1;}
-.login-brand-top .brand-hex{width:38px; height:41px;}
-.login-brand-top .brand-name{font-size:16px;}
 .login-shell{width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px; position:relative; z-index:1;}
 .login-card{position:relative; overflow:hidden; padding:30px 26px;}
 .login-card::before{content:''; position:absolute; top:-60%; right:-30%; width:220px; height:220px; background:radial-gradient(circle, rgba(0,200,248,.14), transparent 70%); pointer-events:none;}
@@ -129,11 +126,11 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .login-links-sep{color:var(--muted-dim); font-size:12px;}
 .cred-box{margin-top:14px; padding:14px 16px; border-radius:12px; background:var(--bg2); border:1px solid var(--line);}
 .cred-box .info-row b{color:#3ecbf5; font-size:15px; letter-spacing:1px;}
+.login-hero{display:none;}
 
 /* Desktop / laptop: layout dividido tipo hero */
 @media (min-width:900px){
   .login-outer{flex-direction:row; align-items:center; justify-content:center; gap:0; padding:0;}
-  .login-brand-top{display:none;}
   .login-hero{flex:1; max-width:560px; display:flex; flex-direction:column; justify-content:center; gap:18px; padding:60px; position:relative; z-index:1;}
   .login-hero .brand{border-bottom:none; padding:0; margin-bottom:8px;}
   .login-hero .brand-hex{width:48px; height:52px;}
@@ -179,33 +176,21 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 <div id="viewLogin">
   <div class="login-outer">
 
-    <!-- Marca compacta (mobile) -->
-    <div class="login-brand-top">
-      <svg class="brand-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="loginHexGrad" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#0d3878"/>
-            <stop offset="100%" stop-color="#051225"/>
-          </linearGradient>
-          <linearGradient id="loginHexStroke" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#00eaff"/>
-            <stop offset="50%" stop-color="#0088cc"/>
-            <stop offset="100%" stop-color="#00c8f8"/>
-          </linearGradient>
-        </defs>
-        <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="url(#loginHexGrad)" stroke="url(#loginHexStroke)" stroke-width="4"/>
-        <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="42" fill="#eef4ff">P<tspan fill="#00eaff">J</tspan></text>
-      </svg>
-      <div class="brand-text">
-        <div class="brand-name"><b>PJ</b> Tecnologia</div>
-        <div class="brand-sub">e Sistemas</div>
-      </div>
-    </div>
-
     <!-- Painel institucional (somente desktop/laptop) -->
     <div class="login-hero">
       <div class="brand">
         <svg class="brand-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="loginHexGrad" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0d3878"/>
+              <stop offset="100%" stop-color="#051225"/>
+            </linearGradient>
+            <linearGradient id="loginHexStroke" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00eaff"/>
+              <stop offset="50%" stop-color="#0088cc"/>
+              <stop offset="100%" stop-color="#00c8f8"/>
+            </linearGradient>
+          </defs>
           <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="url(#loginHexGrad)" stroke="url(#loginHexStroke)" stroke-width="4"/>
           <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="42" fill="#eef4ff">P<tspan fill="#00eaff">J</tspan></text>
         </svg>
