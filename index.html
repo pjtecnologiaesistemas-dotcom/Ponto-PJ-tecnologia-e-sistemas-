@@ -340,12 +340,31 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
   </div>
 </div>
 
+<!-- ===================== VISUALIZAR FOTO DO REGISTRO ===================== -->
+<div id="modalFotoRegistro" class="modal-bg hidden" onclick="if(event.target===this) fecharFotoRegistro()">
+  <div class="card" style="max-width:380px; text-align:center;">
+    <button class="close-x" onclick="fecharFotoRegistro()">✕</button>
+    <h2>Foto do registro</h2>
+    <img id="fotoRegistroImg" src="" style="width:100%; border-radius:12px; margin-top:8px; object-fit:cover;">
+    <p class="small" style="margin-top:10px;" id="fotoRegistroInfo">—</p>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    FIREBASE
    ============================================================ */
 let db=null, currentUser=null, currentTipoBater=null, currentGeo=null, currentFoto=null, faceOk=false, dentroCerca=null, modelsLoaded=false;
 let postosCache={}, colabCache={}, cfgJornada={jornada:8,tolerancia:10,noiteIni:'22:00',noiteFim:'05:00',pctExtra:50,pctNoturno:20};
+
+function abrirFotoRegistro(url, nome, quando){
+  document.getElementById('fotoRegistroImg').src = url;
+  document.getElementById('fotoRegistroInfo').textContent = `${nome} · ${quando}`;
+  document.getElementById('modalFotoRegistro').classList.remove('hidden');
+}
+function fecharFotoRegistro(){
+  document.getElementById('modalFotoRegistro').classList.add('hidden');
+}
 
 function initFirebase(cfg){
   try{
@@ -830,7 +849,7 @@ function carregarDashboard(){
         <td>${LABEL_TIPO[r.tipo]||r.tipo}</td>
         <td>${new Date(r.timestamp).toLocaleString('pt-BR')}</td>
         <td>${r.dentroCerca===false?'<span class="badge warn">fora</span>':r.dentroCerca===true?'<span class="badge ok">ok</span>':'—'}</td>
-        <td>${r.foto?'<span class="badge info">sim</span>':'—'}</td>
+        <td>${r.foto?`<img src="${r.foto}" onclick="abrirFotoRegistro('${r.foto}','${(r.colaboradorNome||'').replace(/'/g,"")}','${new Date(r.timestamp).toLocaleString('pt-BR')}')" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;display:block;">`:'—'}</td>
       </tr>`).join('') || '<tr><td colspan="5" class="small">Sem registros.</td></tr>';
 
     // horas extras do mês (soma simples)
