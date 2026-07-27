@@ -108,24 +108,47 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .pj-footer-tag{font-size:9px; letter-spacing:.6px; color:var(--muted-dim); text-transform:uppercase;}
 
 /* ── Tela de login profissional ── */
-.login-shell{width:100%; display:flex; flex-direction:column; gap:14px;}
-.login-card{position:relative; overflow:hidden;}
+#viewLogin{min-height:100dvh; padding:0; max-width:none; display:flex; align-items:center; justify-content:center;}
+.login-outer{width:100%; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px 18px; position:relative; overflow:hidden;}
+.login-outer::before{content:''; position:absolute; inset:0; background:
+    radial-gradient(700px 420px at 12% -6%, rgba(245,166,35,.09) 0%, transparent 60%),
+    radial-gradient(820px 560px at 88% 4%, rgba(0,200,248,.08) 0%, transparent 55%);
+  pointer-events:none;}
+.login-brand-top{display:flex; align-items:center; gap:12px; margin-bottom:26px; position:relative; z-index:1;}
+.login-brand-top .brand-hex{width:38px; height:41px;}
+.login-brand-top .brand-name{font-size:16px;}
+.login-shell{width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px; position:relative; z-index:1;}
+.login-card{position:relative; overflow:hidden; padding:30px 26px;}
 .login-card::before{content:''; position:absolute; top:-60%; right:-30%; width:220px; height:220px; background:radial-gradient(circle, rgba(0,200,248,.14), transparent 70%); pointer-events:none;}
-.login-head{margin-bottom:4px;}
-.login-head h2{font-size:19px;}
-.login-head p{margin-top:2px;}
-.login-links{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
+.login-head{margin-bottom:4px; text-align:center;}
+.login-head h2{font-size:21px;}
+.login-head p{margin-top:6px; line-height:1.45;}
+.login-links{display:flex; align-items:center; justify-content:center; gap:10px; margin-top:18px; flex-wrap:wrap;}
 .link-btn{background:none; border:none; color:#3ecbf5; font-size:12.5px; font-weight:700; letter-spacing:.2px; cursor:pointer; padding:4px 2px;}
 .link-btn:hover{text-decoration:underline;}
 .login-links-sep{color:var(--muted-dim); font-size:12px;}
-.login-advanced{width:100%; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:2px 16px;}
-.login-advanced summary{list-style:none; cursor:pointer; padding:12px 0; font-size:11.5px; letter-spacing:.5px; text-transform:uppercase; color:var(--muted-dim); font-weight:700;}
-.login-advanced summary::-webkit-details-marker{display:none;}
-.login-advanced summary::after{content:'▾'; float:right; color:var(--muted-dim);}
-.login-advanced[open] summary::after{content:'▴';}
-.login-advanced .btn-ghost{width:100%; margin-bottom:12px;}
 .cred-box{margin-top:14px; padding:14px 16px; border-radius:12px; background:var(--bg2); border:1px solid var(--line);}
 .cred-box .info-row b{color:#3ecbf5; font-size:15px; letter-spacing:1px;}
+
+/* Desktop / laptop: layout dividido tipo hero */
+@media (min-width:900px){
+  .login-outer{flex-direction:row; align-items:center; justify-content:center; gap:0; padding:0;}
+  .login-brand-top{display:none;}
+  .login-hero{flex:1; max-width:560px; display:flex; flex-direction:column; justify-content:center; gap:18px; padding:60px; position:relative; z-index:1;}
+  .login-hero .brand{border-bottom:none; padding:0; margin-bottom:8px;}
+  .login-hero .brand-hex{width:48px; height:52px;}
+  .login-hero .brand-name{font-size:19px;}
+  .login-hero h1{font-size:34px; font-weight:800; letter-spacing:-.5px; margin:0; line-height:1.2;}
+  .login-hero h1 b{color:#3ecbf5;}
+  .login-hero p{font-size:14.5px; color:var(--muted); line-height:1.6; max-width:400px; margin:0;}
+  .login-hero-hex{width:44px; height:48px; margin-top:8px; filter:drop-shadow(0 0 12px rgba(0,200,248,.3));}
+  .login-shell{flex:1; max-width:440px; padding:60px 60px 60px 0;}
+  .login-card{padding:38px 34px; box-shadow:0 30px 70px -20px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.03) inset;}
+}
+@media (min-width:900px) and (max-width:1180px){
+  .login-hero{padding:40px;}
+  .login-shell{padding:40px 40px 40px 0;}
+}
 </style>
 </head>
 <body>
@@ -153,49 +176,82 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 </div>
 
 <!-- ===================== LOGIN ===================== -->
-<div id="viewLogin" class="wrap center-screen">
-  <div class="login-shell">
-    <div class="card login-card">
-      <div class="login-head">
-        <h2>Acessar o sistema</h2>
-        <p class="small">Informe sua matrícula (CPF) e senha para registrar o ponto.</p>
-      </div>
-      <label>Matrícula</label>
-      <input id="loginMat" placeholder="CPF ou admin">
-      <label>Senha</label>
-      <input id="loginSenha" type="password" placeholder="••••••">
-      <button class="btn-main" onclick="doLogin()">Entrar</button>
-      <div class="err" id="loginErr"></div>
+<div id="viewLogin">
+  <div class="login-outer">
 
-      <div class="login-links">
-        <button class="link-btn" onclick="abrirPrimeiroCadastro()">Primeiro cadastro</button>
-        <span class="login-links-sep">·</span>
-        <button class="link-btn" onclick="abrirRecuperarSenha()">Esqueci minha senha</button>
+    <!-- Marca compacta (mobile) -->
+    <div class="login-brand-top">
+      <svg class="brand-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="loginHexGrad" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0d3878"/>
+            <stop offset="100%" stop-color="#051225"/>
+          </linearGradient>
+          <linearGradient id="loginHexStroke" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00eaff"/>
+            <stop offset="50%" stop-color="#0088cc"/>
+            <stop offset="100%" stop-color="#00c8f8"/>
+          </linearGradient>
+        </defs>
+        <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="url(#loginHexGrad)" stroke="url(#loginHexStroke)" stroke-width="4"/>
+        <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="42" fill="#eef4ff">P<tspan fill="#00eaff">J</tspan></text>
+      </svg>
+      <div class="brand-text">
+        <div class="brand-name"><b>PJ</b> Tecnologia</div>
+        <div class="brand-sub">e Sistemas</div>
       </div>
     </div>
 
-    <details class="login-advanced">
-      <summary>Opções avançadas</summary>
-      <button class="btn-ghost" onclick="toggleFirstRun()">Primeiro uso · configurar Firebase</button>
-      <button class="btn-ghost" onclick="iniciarModoOffline()">🧪 Testar offline (dados de exemplo)</button>
-    </details>
-  </div>
-
-  <div id="firstRunBox" class="card hidden" style="width:100%">
-    <h3>Conexão Firebase (Realtime Database)</h3>
-    <p class="small">Cole a config do seu projeto Firebase (mesma base do app de ponto atual). Fica salva só neste navegador.</p>
-    <textarea id="fbConfigInput" rows="7" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;" placeholder='{"apiKey":"...","databaseURL":"https://SEU-PROJETO.firebaseio.com","projectId":"..."}'></textarea>
-    <button class="btn-main" onclick="saveFirebaseConfig()">Salvar e conectar</button>
-  </div>
-
-  <div class="pj-footer">
-    <svg class="pj-footer-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="#0a1626" stroke="#00c8f8" stroke-width="5"/>
-    </svg>
-    <div class="pj-footer-text">
-      <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
-      <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
+    <!-- Painel institucional (somente desktop/laptop) -->
+    <div class="login-hero">
+      <div class="brand">
+        <svg class="brand-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="url(#loginHexGrad)" stroke="url(#loginHexStroke)" stroke-width="4"/>
+          <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="42" fill="#eef4ff">P<tspan fill="#00eaff">J</tspan></text>
+        </svg>
+        <div class="brand-text">
+          <div class="brand-name"><b>PJ</b> Tecnologia</div>
+          <div class="brand-sub">e Sistemas</div>
+        </div>
+      </div>
+      <h1>Ponto MS <b>·</b> Controle de Jornada</h1>
+      <p>Registro de ponto rápido e seguro para as equipes do Grupo M.S. Acesse com sua matrícula para bater o ponto, acompanhar sua jornada e manter tudo sincronizado em tempo real.</p>
+      <svg class="login-hero-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="none" stroke="#00c8f8" stroke-width="4"/>
+      </svg>
     </div>
+
+    <div class="login-shell">
+      <div class="card login-card">
+        <div class="login-head">
+          <h2>Acessar o sistema</h2>
+          <p class="small">Informe sua matrícula (CPF) e senha para registrar o ponto.</p>
+        </div>
+        <label>Matrícula</label>
+        <input id="loginMat" placeholder="CPF ou admin">
+        <label>Senha</label>
+        <input id="loginSenha" type="password" placeholder="••••••">
+        <button class="btn-main" onclick="doLogin()">Entrar</button>
+        <div class="err" id="loginErr"></div>
+
+        <div class="login-links">
+          <button class="link-btn" onclick="abrirPrimeiroCadastro()">Primeiro cadastro</button>
+          <span class="login-links-sep">·</span>
+          <button class="link-btn" onclick="abrirRecuperarSenha()">Esqueci minha senha</button>
+        </div>
+      </div>
+
+      <div class="pj-footer">
+        <svg class="pj-footer-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="#0a1626" stroke="#00c8f8" stroke-width="5"/>
+        </svg>
+        <div class="pj-footer-text">
+          <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
+          <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
