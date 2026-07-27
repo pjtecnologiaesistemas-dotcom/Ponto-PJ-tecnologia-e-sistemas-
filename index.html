@@ -24,10 +24,12 @@ body{margin:0; background:
     radial-gradient(1000px 700px at 85% 0%, #101b26 0%, var(--bg) 55%);
   color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased;
 }
-.brand{display:flex; align-items:center; gap:11px; padding:20px 20px 14px; border-bottom:1px solid var(--line-soft); margin-bottom:6px;}
-.brand .mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(150deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a1206;font-size:15px;letter-spacing:-1px; box-shadow:0 4px 14px -4px rgba(245,166,35,.5);}
-.brand h1{font-size:13px; margin:0; letter-spacing:.6px; color:var(--muted); font-weight:600; text-transform:uppercase;}
-.brand h1 b{color:var(--text); font-weight:800;}
+.brand{display:flex; align-items:center; gap:12px; padding:18px 20px 14px; border-bottom:1px solid var(--line-soft); margin-bottom:6px;}
+.brand-hex{width:34px; height:37px; flex-shrink:0; filter:drop-shadow(0 0 10px rgba(0,200,248,.35));}
+.brand-text{display:flex; flex-direction:column; line-height:1.15;}
+.brand-name{font-family:inherit; font-size:15px; font-weight:800; letter-spacing:1.5px; color:var(--text); text-transform:uppercase;}
+.brand-name b{color:#3ecbf5;}
+.brand-sub{font-size:9.5px; letter-spacing:2.5px; color:var(--muted-dim); text-transform:uppercase; margin-top:1px;}
 .wrap{max-width:480px; margin:0 auto; padding:10px 16px 48px;}
 .wrap.wide{max-width:980px;}
 .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:14px; box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,.03) inset;}
@@ -108,7 +110,27 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 </head>
 <body>
 
-<div class="brand"><div class="mark">MS</div><h1><b>Ponto MS</b> · Grupo M.S / PJ Tecnologia</h1></div>
+<div class="brand">
+  <svg class="brand-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="brandHexGrad" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#0d3878"/>
+        <stop offset="100%" stop-color="#051225"/>
+      </linearGradient>
+      <linearGradient id="brandHexStroke" x1="0" y1="0" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#00eaff"/>
+        <stop offset="50%" stop-color="#0088cc"/>
+        <stop offset="100%" stop-color="#00c8f8"/>
+      </linearGradient>
+    </defs>
+    <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="url(#brandHexGrad)" stroke="url(#brandHexStroke)" stroke-width="4"/>
+    <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="42" fill="#eef4ff">P<tspan fill="#00eaff">J</tspan></text>
+  </svg>
+  <div class="brand-text">
+    <div class="brand-name"><b>PJ</b> Tecnologia</div>
+    <div class="brand-sub">e Sistemas</div>
+  </div>
+</div>
 
 <!-- ===================== LOGIN ===================== -->
 <div id="viewLogin" class="wrap center-screen">
