@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Ponto MS · Controle de Jornada</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUG9udG8gTVMiLCJzaG9ydF9uYW1lIjoiUG9udG8gTVMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBiMTIxYSIsInRoZW1lX2NvbG9yIjoiIzBiMTIxYSJ9">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+:root{
+  --bg:#0b121a; --bg2:#101a24; --panel:#141f2b; --panel2:#182430;
+  --line:#233240; --text:#e8eef3; --muted:#8fa3b3;
+  --accent:#ffb238; --accent-dim:#7a5a1e;
+  --ok:#39c98f; --warn:#f2555a; --info:#4fb3e0;
+  --radius:14px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+body{margin:0; background:radial-gradient(1200px 800px at 80% -10%, #16222f 0%, var(--bg) 55%); color:var(--text); min-height:100vh;}
+.brand{display:flex; align-items:center; gap:10px; padding:18px 20px 6px;}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#ff7a3d);display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a1206;font-size:15px;letter-spacing:-1px;}
+.brand h1{font-size:15px; margin:0; letter-spacing:.5px; color:var(--muted); font-weight:600; text-transform:uppercase;}
+.brand h1 b{color:var(--text);}
+.wrap{max-width:480px; margin:0 auto; padding:6px 16px 40px;}
+.wrap.wide{max-width:960px;}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+.hidden{display:none !important;}
+label{display:block; font-size:12px; color:var(--muted); margin:12px 0 6px; text-transform:uppercase; letter-spacing:.5px;}
+input,select{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--bg2); color:var(--text); font-size:15px;}
+input:focus,select:focus{outline:none; border-color:var(--accent);}
+button{cursor:pointer; border:none; border-radius:10px; font-weight:700; font-size:14px; letter-spacing:.3px; transition:transform .08s ease, filter .15s ease;}
+button:active{transform:scale(.97);}
+.btn-main{width:100%; padding:16px; background:linear-gradient(135deg,var(--accent),#ff7a3d); color:#1a1206; margin-top:16px; font-size:15px;}
+.btn-ghost{width:100%; padding:12px; background:transparent; border:1px solid var(--line); color:var(--muted); margin-top:8px;}
+.btn-sm{padding:8px 12px; background:var(--panel2); color:var(--text); border:1px solid var(--line); font-size:12px;}
+.btn-danger{background:var(--warn); color:#2a0b0c;}
+.btn-ok{background:var(--ok); color:#06261a;}
+.err{color:var(--warn); font-size:13px; margin-top:10px; min-height:0;}
+.center-screen{min-height:80vh; display:flex; align-items:center; justify-content:center;}
+.clock{font-size:52px; font-weight:800; text-align:center; letter-spacing:1px; font-variant-numeric:tabular-nums;}
+.clock small{display:block; font-size:14px; color:var(--muted); font-weight:500; text-transform:capitalize; margin-top:4px;}
+.status-pill{display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; font-size:12px; font-weight:700; background:var(--panel2); border:1px solid var(--line); color:var(--muted);}
+.status-pill.on{color:var(--ok); border-color:#1c4a38;}
+.status-pill.off{color:var(--muted);}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.info-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;}
+.info-row:last-child{border-bottom:none;}
+.info-row span:first-child{color:var(--muted);}
+.badge{padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700;}
+.badge.ok{background:#123125; color:var(--ok);}
+.badge.warn{background:#331414; color:var(--warn);}
+.badge.info{background:#122a35; color:var(--info);}
+video,canvas{width:100%; border-radius:12px; background:#000;}
+.cam-wrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+.cam-frame{position:absolute; inset:12%; border:2px dashed rgba(255,255,255,.35); border-radius:50%; pointer-events:none;}
+.cam-status{position:absolute; bottom:8px; left:8px; right:8px; text-align:center; font-size:12px; padding:6px; border-radius:8px; background:rgba(0,0,0,.55);}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th,td{padding:9px 8px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap;}
+th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; position:sticky; top:0; background:var(--panel);}
+.table-scroll{overflow-x:auto; max-height:60vh; overflow-y:auto;}
+.tabs{display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;}
+.tab{padding:9px 14px; border-radius:9px; background:var(--panel); border:1px solid var(--line); color:var(--muted); font-size:13px; white-space:nowrap;}
+.tab.active{background:var(--accent); color:#1a1206; border-color:var(--accent);}
+.kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:14px;}
+.kpi .box{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px;}
+.kpi .box b{display:block; font-size:22px;}
+.kpi .box span{font-size:11px; color:var(--muted); text-transform:uppercase;}
+.toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--line); padding:12px 18px; border-radius:10px; font-size:13px; z-index:99; box-shadow:0 8px 24px rgba(0,0,0,.4); max-width:90%; text-align:center;}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--accent);border-radius:50%; display:inline-block; animation:sp .7s linear infinite; vertical-align:-3px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.top-actions{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+.small{font-size:12px; color:var(--muted);}
+.flex{display:flex; gap:8px;}
+.map-mini{height:110px; border-radius:10px; background:linear-gradient(135deg,var(--bg2),var(--panel2)); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--muted);}
+select[multiple]{height:auto;}
+.close-x{position:absolute; top:14px; right:14px; background:var(--panel2); width:30px; height:30px; border-radius:50%; color:var(--muted); font-size:16px;}
+.modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-end; justify-content:center; z-index:80;}
+.modal-bg .card{width:100%; max-width:480px; border-radius:18px 18px 0 0; max-height:88vh; overflow-y:auto; position:relative; margin:0;}
+h2{font-size:16px; margin:0 0 4px;}
+h3{font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 12px;}
+</style>
+</head>
+<body>
+
+<div class="brand"><div class="mark">MS</div><h1><b>Ponto MS</b> · Grupo M.S / PJ Tecnologia</h1></div>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="viewLogin" class="wrap center-screen">
+  <div class="card" style="width:100%">
+    <h2>Entrar</h2>
+    <p class="small">Informe matrícula e senha para registrar o ponto.</p>
+    <label>Matrícula</label>
+    <input id="loginMat" inputmode="numeric" placeholder="Ex: 0231">
+    <label>Senha</label>
+    <input id="loginSenha" type="password" placeholder="••••••">
+    <button class="btn-main" onclick="doLogin()">Entrar</button>
+    <div class="err" id="loginErr"></div>
+    <button class="btn-ghost" onclick="toggleFirstRun()">Primeiro uso · configurar Firebase</button>
+    <button class="btn-ghost" onclick="iniciarModoOffline()">🧪 Testar offline (dados de exemplo)</button>
+  </div>
+
+  <div id="firstRunBox" class="card hidden" style="width:100%">
+    <h3>Conexão Firebase (Realtime Database)</h3>
+    <p class="small">Cole a config do seu projeto Firebase (mesma base do app de ponto atual). Fica salva só neste navegador.</p>
+    <textarea id="fbConfigInput" rows="7" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;" placeholder='{"apiKey":"...","databaseURL":"https://SEU-PROJETO.firebaseio.com","projectId":"..."}'></textarea>
+    <button class="btn-main" onclick="saveFirebaseConfig()">Salvar e conectar</button>
+  </div>
+</div>
+
+<!-- ===================== COLABORADOR ===================== -->
+<div id="viewColab" class="wrap hidden">
+  <div class="top-actions">
+    <div>
+      <div style="font-weight:700;" id="colabNome">—</div>
+      <div class="small" id="colabCargoPosto">—</div>
+    </div>
+    <button class="btn-sm" onclick="logout()">Sair</button>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <div class="clock" id="relogio">--:--:--<small id="dataAtual">—</small></div>
+    <div style="margin-top:10px;" id="statusPill" class="status-pill off"><span class="dot"></span> Fora de expediente</div>
+  </div>
+
+  <div class="card">
+    <h3>Registrar</h3>
+    <div class="grid2">
+      <button class="btn-main" style="margin-top:0;grid-column:1/3;" id="btnBater" onclick="abrirCaptura()">Bater ponto</button>
+    </div>
+    <div class="small" style="margin-top:10px;" id="proximoTipo">Próximo registro: Entrada</div>
+  </div>
+
+  <div class="card">
+    <h3>Hoje</h3>
+    <div id="registrosHoje"><p class="small">Nenhum registro ainda.</p></div>
+  </div>
+
+  <div class="card">
+    <h3>Banco de horas (mês)</h3>
+    <div class="info-row"><span>Horas trabalhadas</span><span id="mesTrabalhadas">0h00</span></div>
+    <div class="info-row"><span>Jornada prevista</span><span id="mesPrevista">0h00</span></div>
+    <div class="info-row"><span>Saldo</span><span id="mesSaldo">0h00</span></div>
+  </div>
+</div>
+
+<!-- ===================== CAPTURA (câmera + geo) ===================== -->
+<div id="modalCaptura" class="modal-bg hidden">
+  <div class="card">
+    <button class="close-x" onclick="fecharCaptura()">✕</button>
+    <h2 id="capturaTitulo">Confirmar registro</h2>
+    <p class="small" id="capturaSub">Posicione o rosto dentro do círculo.</p>
+    <div class="cam-wrap" style="margin-top:12px;">
+      <video id="camVideo" autoplay playsinline muted></video>
+      <div class="cam-frame"></div>
+      <div class="cam-status" id="camStatus">Iniciando câmera…</div>
+    </div>
+    <canvas id="camCanvas" class="hidden"></canvas>
+
+    <div style="margin-top:14px;">
+      <div class="info-row"><span>Localização</span><span id="geoStatus"><span class="spin"></span></span></div>
+      <div class="info-row"><span>Cerca virtual</span><span id="cercaStatus">—</span></div>
+      <div class="info-row"><span>Rosto detectado</span><span id="faceStatus">—</span></div>
+    </div>
+
+    <button class="btn-main" id="btnConfirmarCaptura" onclick="confirmarRegistro()" disabled>Confirmar registro</button>
+    <div class="err" id="capturaErr"></div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN ===================== -->
+<div id="viewAdmin" class="wrap wide hidden">
+  <div class="top-actions">
+    <div>
+      <div style="font-weight:700;">Painel administrativo</div>
+      <div class="small">Grupo M.S — gestão de jornada</div>
+    </div>
+    <button class="btn-sm" onclick="logout()">Sair</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dash" onclick="switchTab('dash')">Dashboard</div>
+    <div class="tab" data-tab="registros" onclick="switchTab('registros')">Registros</div>
+    <div class="tab" data-tab="colab" onclick="switchTab('colab')">Colaboradores</div>
+    <div class="tab" data-tab="postos" onclick="switchTab('postos')">Postos / Cerca virtual</div>
+    <div class="tab" data-tab="config" onclick="switchTab('config')">Config. jornada</div>
+  </div>
+
+  <div id="tabDash" class="tabcontent">
+    <div class="kpi">
+      <div class="box"><b id="kpiColab">0</b><span>Colaboradores</span></div>
+      <div class="box"><b id="kpiHoje">0</b><span>Registros hoje</span></div>
+      <div class="box"><b id="kpiForaCerca">0</b><span>Fora da cerca (7d)</span></div>
+      <div class="box"><b id="kpiExtras">0h00</b><span>Horas extras (mês)</span></div>
+    </div>
+    <div class="card">
+      <h3>Atividade recente</h3>
+      <div class="table-scroll">
+        <table id="tblRecente"><thead><tr><th>Colaborador</th><th>Tipo</th><th>Hora</th><th>Cerca</th><th>Foto</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabRegistros" class="tabcontent hidden">
+    <div class="card">
+      <div class="grid2">
+        <div><label>Colaborador</label><select id="filtroColab"><option value="">Todos</option></select></div>
+        <div><label>Mês</label><input type="month" id="filtroMes"></div>
+      </div>
+      <button class="btn-sm" style="margin-top:12px;" onclick="carregarRelatorio()">Aplicar filtro</button>
+      <button class="btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <table id="tblRegistros"><thead><tr><th>Colaborador</th><th>Data</th><th>Entrada</th><th>Int.Início</th><th>Int.Fim</th><th>Saída</th><th>Trab.</th><th>Extra</th><th>Cerca</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabColab" class="tabcontent hidden">
+    <div class="card">
+      <h3>Novo colaborador</h3>
+      <div class="grid2">
+        <div><label>Nome</label><input id="novoNome"></div>
+        <div><label>Matrícula</label><input id="novoMat"></div>
+        <div><label>Senha</label><input id="novoSenha" type="password"></div>
+        <div><label>Cargo</label><input id="novoCargo" placeholder="Vigilante, Supervisor..."></div>
+        <div style="grid-column:1/3;"><label>Posto</label><select id="novoPosto"></select></div>
+      </div>
+      <button class="btn-main" onclick="criarColaborador()">Cadastrar</button>
+      <div class="err" id="colabErr"></div>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <table id="tblColab"><thead><tr><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Posto</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabPostos" class="tabcontent hidden">
+    <div class="card">
+      <h3>Novo posto</h3>
+      <div class="grid2">
+        <div><label>Nome do posto</label><input id="novoPostoNome"></div>
+        <div><label>Raio da cerca (m)</label><input id="novoPostoRaio" type="number" value="150"></div>
+      </div>
+      <button class="btn-sm" style="margin-top:12px;" onclick="usarMinhaLocalizacao()">Usar minha localização atual</button>
+      <div class="grid2" style="margin-top:10px;">
+        <div><label>Latitude</label><input id="novoPostoLat" type="number" step="any"></div>
+        <div><label>Longitude</label><input id="novoPostoLng" type="number" step="any"></div>
+      </div>
+      <button class="btn-main" onclick="criarPosto()">Salvar posto</button>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <table id="tblPostos"><thead><tr><th>Nome</th><th>Raio</th><th>Coordenadas</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabConfig" class="tabcontent hidden">
+    <div class="card">
+      <h3>Regras de jornada (CLT aproximado)</h3>
+      <div class="grid2">
+        <div><label>Jornada diária prevista (h)</label><input id="cfgJornada" type="number" step="0.5" value="8"></div>
+        <div><label>Tolerância (min)</label><input id="cfgTolerancia" type="number" value="10"></div>
+        <div><label>Início adicional noturno</label><input id="cfgNoiteIni" type="time" value="22:00"></div>
+        <div><label>Fim adicional noturno</label><input id="cfgNoiteFim" type="time" value="05:00"></div>
+        <div><label>% Hora extra</label><input id="cfgPctExtra" type="number" value="50"></div>
+        <div><label>% Adicional noturno</label><input id="cfgPctNoturno" type="number" value="20"></div>
+      </div>
+      <button class="btn-main" onclick="salvarConfigJornada()">Salvar regras</button>
+      <p class="small">Essas regras alimentam o cálculo de horas extras e banco de horas exibido para colaboradores e no dashboard.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE
+   ============================================================ */
+let db=null, currentUser=null, currentTipoBater=null, currentGeo=null, currentFoto=null, faceOk=false, dentroCerca=null, modelsLoaded=false;
+let postosCache={}, colabCache={}, cfgJornada={jornada:8,tolerancia:10,noiteIni:'22:00',noiteFim:'05:00',pctExtra:50,pctNoturno:20};
+
+function initFirebase(cfg){
+  try{
+    firebase.initializeApp(cfg);
+    db = firebase.database();
+    return true;
+  }catch(e){ console.error(e); return false; }
+}
+
+/* ---------- MODO TESTE OFFLINE (banco local, sem servidor) ---------- */
+function createMockDB(){
+  const KEY='pontoms_offline_store';
+  const listeners = {};
+  function loadStore(){ try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};} }
+  function saveStore(s){ localStorage.setItem(KEY, JSON.stringify(s)); }
+  function getAtPath(store, path){
+    return path.split('/').filter(Boolean).reduce((o,k)=>(o&&o[k]!==undefined)?o[k]:undefined, store);
+  }
+  function setAtPath(store, path, value){
+    const parts = path.split('/').filter(Boolean);
+    let o = store;
+    for(let i=0;i<parts.length-1;i++){ if(!o[parts[i]]) o[parts[i]]={}; o=o[parts[i]]; }
+    if(value===null){ delete o[parts[parts.length-1]]; } else { o[parts[parts.length-1]] = value; }
+  }
+  function makeSnap(val){ return { val: ()=>val }; }
+  function notifyPrefixed(path){
+    const store = loadStore();
+    Object.keys(listeners).forEach(lp=>{
+      if(path===lp || path.startsWith(lp+'/') || lp.startsWith(path+'/')){
+        (listeners[lp]||[]).forEach(cb=>cb(makeSnap(getAtPath(store,lp))));
+      }
+    });
+  }
+  function refObj(path, filter){
+    return {
+      on(event, cb){
+        listeners[path] = listeners[path]||[];
+        listeners[path].push(cb);
+        const store = loadStore();
+        cb(makeSnap(getAtPath(store,path)));
+      },
+      once(){
+        const store = loadStore();
+        let val = getAtPath(store,path);
+        if(filter && val){
+          val = Object.fromEntries(Object.entries(val).filter(([k,v])=>v && v[filter.field]===filter.value));
+        }
+        return Promise.resolve(makeSnap(val));
+      },
+      orderByChild(field){ return { equalTo(value){ return refObj(path, {field, value}); } }; },
+      push(obj){
+        const store = loadStore();
+        const id = 'id'+Date.now()+Math.random().toString(36).slice(2,8);
+        setAtPath(store, path+'/'+id, obj);
+        saveStore(store);
+        notifyPrefixed(path);
+        return Promise.resolve({key:id});
+      },
+      set(obj){
+        const store = loadStore();
+        setAtPath(store, path, obj);
+        saveStore(store);
+        notifyPrefixed(path);
+        return Promise.resolve();
+      },
+      remove(){
+        const store = loadStore();
+        setAtPath(store, path, null);
+        saveStore(store);
+        notifyPrefixed(path);
+        return Promise.resolve();
+      }
+    };
+  }
+  return { ref: refObj };
+}
+
+function seedOfflineDataSeNecessario(){
+  const vazio = !localStorage.getItem('pontoms_offline_store');
+  if(!vazio) return;
+  db.ref('usuarios_admin/admin').set({nome:'Administrador', senha:'admin123'});
+  db.ref('postos').push({nome:'Posto Teste (área ampla)', lat:-23.5505, lng:-46.6333, raio:50000}).then(()=>{
+    db.ref('postos').once().then(snap=>{
+      const postos = snap.val()||{};
+      const postoId = Object.keys(postos)[0];
+      db.ref('colaboradores').push({nome:'Colaborador Teste', matricula:'1001', senha:'123', cargo:'Vigilante', postoId});
+    });
+  });
+}
+
+function iniciarModoOffline(){
+  db = createMockDB();
+  localStorage.setItem('pontoms_modo_offline','1');
+  seedOfflineDataSeNecessario();
+  loadGlobalData();
+  document.getElementById('firstRunBox').classList.add('hidden');
+  toast('Modo offline ativo — admin: admin/admin123 · colaborador: 1001/123');
+}
+
+(function boot(){
+  const DEFAULT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDALdaMxS3JHRr5kP7NSUcqNlzl0K5fb2w",
+    authDomain: "ponto-pj-tecnologia.firebaseapp.com",
+    databaseURL: "https://ponto-pj-tecnologia-default-rtdb.firebaseio.com",
+    projectId: "ponto-pj-tecnologia",
+    storageBucket: "ponto-pj-tecnologia.firebasestorage.app",
+    messagingSenderId: "768770053742",
+    appId: "1:768770053742:web:c38be9425cd35a75fb787f"
+  };
+  if(localStorage.getItem('pontoms_modo_offline')==='1'){
+    db = createMockDB();
+    loadGlobalData();
+  } else {
+    const saved = localStorage.getItem('pontoms_fbconfig');
+    const cfg = saved ? JSON.parse(saved) : DEFAULT_FIREBASE_CONFIG;
+    try{
+      initFirebase(cfg);
+      if(!saved) localStorage.setItem('pontoms_fbconfig', JSON.stringify(cfg));
+      loadGlobalData();
+    }catch(e){ console.error(e); }
+  }
+  const savedUser = localStorage.getItem('pontoms_user');
+  if(savedUser && db){
+    currentUser = JSON.parse(savedUser);
+    setTimeout(()=>enterApp(), 300);
+  }
+  tickClock();
+  setInterval(tickClock,1000);
+})();
+
+function toggleFirstRun(){ document.getElementById('firstRunBox').classList.toggle('hidden'); }
+function saveFirebaseConfig(){
+  const raw = document.getElementById('fbConfigInput').value.trim();
+  try{
+    const cfg = JSON.parse(raw);
+    if(initFirebase(cfg)){
+      localStorage.setItem('pontoms_fbconfig', JSON.stringify(cfg));
+      loadGlobalData();
+      toast('Conectado ao Firebase.');
+      document.getElementById('firstRunBox').classList.add('hidden');
+    }
+  }catch(e){ toast('Config inválida. Cole um JSON de config do Firebase.'); }
+}
+
+function loadGlobalData(){
+  if(!db) return;
+  db.ref('postos').on('value', snap=>{ postosCache = snap.val()||{}; renderPostosTable(); fillPostoSelect(); });
+  db.ref('colaboradores').on('value', snap=>{ colabCache = snap.val()||{}; renderColabTable(); fillFiltroColab(); });
+  db.ref('config/jornada').on('value', snap=>{
+    if(snap.val()) cfgJornada = snap.val();
+    const c=cfgJornada;
+    document.getElementById('cfgJornada') && (document.getElementById('cfgJornada').value=c.jornada);
+    document.getElementById('cfgTolerancia') && (document.getElementById('cfgTolerancia').value=c.tolerancia);
+    document.getElementById('cfgNoiteIni') && (document.getElementById('cfgNoiteIni').value=c.noiteIni);
+    document.getElementById('cfgNoiteFim') && (document.getElementById('cfgNoiteFim').value=c.noiteFim);
+    document.getElementById('cfgPctExtra') && (document.getElementById('cfgPctExtra').value=c.pctExtra);
+    document.getElementById('cfgPctNoturno') && (document.getElementById('cfgPctNoturno').value=c.pctNoturno);
+  });
+}
+
+/* ============================================================
+   LOGIN / SESSÃO
+   ============================================================ */
+function doLogin(){
+  const mat = document.getElementById('loginMat').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent='';
+  if(!db){ errEl.textContent='Configure o Firebase primeiro (link abaixo).'; return; }
+  if(mat==='admin' && senha){
+    db.ref('usuarios_admin/'+mat).once('value').then(snap=>{
+      const u = snap.val();
+      if(u && u.senha===senha){
+        currentUser = {tipo:'admin', nome:u.nome||'Administrador'};
+        localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
+        enterApp();
+      } else if(mat==='admin' && senha==='admin123' && !u){
+        // bootstrap first admin
+        db.ref('usuarios_admin/admin').set({nome:'Administrador', senha:'admin123'});
+        currentUser = {tipo:'admin', nome:'Administrador'};
+        localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
+        enterApp();
+      } else { errEl.textContent='Usuário ou senha inválidos.'; }
+    });
+    return;
+  }
+  db.ref('colaboradores').orderByChild('matricula').equalTo(mat).once('value').then(snap=>{
+    const val = snap.val();
+    if(!val){ errEl.textContent='Matrícula não encontrada.'; return; }
+    const id = Object.keys(val)[0];
+    const c = val[id];
+    if(c.senha !== senha){ errEl.textContent='Senha incorreta.'; return; }
+    currentUser = {tipo:'colaborador', id, ...c};
+    localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
+    enterApp();
+  });
+}
+
+function logout(){
+  localStorage.removeItem('pontoms_user');
+  currentUser=null;
+  document.getElementById('viewColab').classList.add('hidden');
+  document.getElementById('viewAdmin').classList.add('hidden');
+  document.getElementById('viewLogin').classList.remove('hidden');
+}
+
+function enterApp(){
+  document.getElementById('viewLogin').classList.add('hidden');
+  if(currentUser.tipo==='admin'){
+    document.getElementById('viewAdmin').classList.remove('hidden');
+    carregarDashboard();
+  } else {
+    document.getElementById('viewColab').classList.remove('hidden');
+    document.getElementById('colabNome').textContent = currentUser.nome;
+    document.getElementById('colabCargoPosto').textContent = (currentUser.cargo||'—') + ' · ' + (postosCache[currentUser.postoId]?.nome || 'sem posto');
+    carregarRegistrosHoje();
+  }
+}
+
+/* ============================================================
+   RELÓGIO
+   ============================================================ */
+function tickClock(){
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const el = document.getElementById('relogio');
+  if(el){
+    el.innerHTML = `${h}:${m}:${s}<small>${now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</small>`;
+  }
+}
+
+/* ============================================================
+   REGISTROS DO COLABORADOR
+   ============================================================ */
+const ORDEM_TIPOS = ['entrada','intervalo_inicio','intervalo_fim','saida'];
+const LABEL_TIPO = {entrada:'Entrada', intervalo_inicio:'Início do intervalo', intervalo_fim:'Fim do intervalo', saida:'Saída'};
+
+function carregarRegistrosHoje(){
+  if(!db || !currentUser) return;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  db.ref('registros').orderByChild('colaboradorId').equalTo(currentUser.id).once('value').then(snap=>{
+    const all = snap.val()||{};
+    const hojeArr = Object.values(all).filter(r=>r.timestamp>=hoje.getTime()).sort((a,b)=>a.timestamp-b.timestamp);
+    renderRegistrosHoje(hojeArr);
+    const proximo = ORDEM_TIPOS[hojeArr.length] || 'entrada (novo dia)';
+    document.getElementById('proximoTipo').textContent = 'Próximo registro: ' + (LABEL_TIPO[proximo]||proximo);
+    currentTipoBater = ORDEM_TIPOS[hojeArr.length % ORDEM_TIPOS.length];
+    const pill = document.getElementById('statusPill');
+    const trabalhando = hojeArr.length%4===1 || hojeArr.length%4===3;
+    if(hojeArr.length>0 && hojeArr.length<4){
+      pill.className='status-pill on'; pill.innerHTML='<span class="dot"></span> Em expediente';
+    } else {
+      pill.className='status-pill off'; pill.innerHTML='<span class="dot"></span> Fora de expediente';
+    }
+    calcularBancoMes();
+  });
+}
+
+function renderRegistrosHoje(arr){
+  const el = document.getElementById('registrosHoje');
+  if(!arr.length){ el.innerHTML = '<p class="small">Nenhum registro ainda.</p>'; return; }
+  el.innerHTML = arr.map(r=>{
+    const hora = new Date(r.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const badge = r.dentroCerca ? '<span class="badge ok">na área</span>' : '<span class="badge warn">fora da área</span>';
+    return `<div class="info-row"><span>${LABEL_TIPO[r.tipo]||r.tipo}</span><span>${hora} ${badge}</span></div>`;
+  }).join('');
+}
+
+function calcularBancoMes(){
+  if(!db||!currentUser) return;
+  const inicio = new Date(); inicio.setDate(1); inicio.setHours(0,0,0,0);
+  db.ref('registros').orderByChild('colaboradorId').equalTo(currentUser.id).once('value').then(snap=>{
+    const all = Object.values(snap.val()||{}).filter(r=>r.timestamp>=inicio.getTime());
+    const porDia = agruparPorDia(all);
+    let totalMs=0, diasContados=0;
+    Object.values(porDia).forEach(dia=>{ totalMs += calcularHorasDia(dia).trabalhadoMs; diasContados++; });
+    const previstaMs = diasContados * cfgJornada.jornada*3600000;
+    document.getElementById('mesTrabalhadas').textContent = fmtHoras(totalMs);
+    document.getElementById('mesPrevista').textContent = fmtHoras(previstaMs);
+    const saldo = totalMs - previstaMs;
+    const saldoEl = document.getElementById('mesSaldo');
+    saldoEl.textContent = (saldo>=0?'+':'-') + fmtHoras(Math.abs(saldo));
+    saldoEl.style.color = saldo>=0 ? 'var(--ok)' : 'var(--warn)';
+  });
+}
+
+function agruparPorDia(registros){
+  const out={};
+  registros.forEach(r=>{
+    const d = new Date(r.timestamp); d.setHours(0,0,0,0);
+    const key = d.getTime();
+    if(!out[key]) out[key]={};
+    out[key][r.tipo] = r.timestamp;
+  });
+  return out;
+}
+
+function calcularHorasDia(dia){
+  let trabalhadoMs=0;
+  if(dia.entrada && dia.saida){
+    trabalhadoMs = dia.saida - dia.entrada;
+    if(dia.intervalo_inicio && dia.intervalo_fim){
+      trabalhadoMs -= (dia.intervalo_fim - dia.intervalo_inicio);
+    }
+  }
+  const previstoMs = cfgJornada.jornada*3600000;
+  const extraMs = Math.max(0, trabalhadoMs - previstoMs);
+  return {trabalhadoMs: Math.max(0,trabalhadoMs), extraMs};
+}
+
+function fmtHoras(ms){
+  if(!ms||ms<0) ms=Math.abs(ms||0);
+  const totalMin = Math.round(ms/60000);
+  const h = Math.floor(totalMin/60);
+  const m = totalMin%60;
+  return `${h}h${String(m).padStart(2,'0')}`;
+}
+
+/* ============================================================
+   CAPTURA: GEOLOCALIZAÇÃO + CERCA VIRTUAL + FACE
+   ============================================================ */
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+let camStream=null;
+async function abrirCaptura(){
+  faceOk=false; currentGeo=null; currentFoto=null; dentroCerca=null;
+  document.getElementById('capturaTitulo').textContent = 'Confirmar: ' + (LABEL_TIPO[currentTipoBater]||currentTipoBater);
+  document.getElementById('geoStatus').innerHTML = '<span class="spin"></span>';
+  document.getElementById('cercaStatus').textContent='—';
+  document.getElementById('faceStatus').textContent='—';
+  document.getElementById('capturaErr').textContent='';
+  document.getElementById('btnConfirmarCaptura').disabled=true;
+  document.getElementById('modalCaptura').classList.remove('hidden');
+
+  // Geolocalização
+  navigator.geolocation.getCurrentPosition(pos=>{
+    currentGeo = {lat:pos.coords.latitude, lng:pos.coords.longitude, acc:pos.coords.accuracy};
+    document.getElementById('geoStatus').textContent = `±${Math.round(pos.coords.accuracy)}m`;
+    avaliarCerca();
+  }, err=>{
+    document.getElementById('geoStatus').innerHTML = '<span class="badge warn">indisponível</span>';
+    document.getElementById('capturaErr').textContent = 'Não foi possível obter localização. Ative o GPS e permita o acesso.';
+  }, {enableHighAccuracy:true, timeout:15000});
+
+  // Câmera
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    document.getElementById('camVideo').srcObject = camStream;
+    document.getElementById('camStatus').textContent = 'Carregando verificação facial…';
+    await loadFaceModels();
+    detectarRostoLoop();
+  }catch(e){
+    document.getElementById('camStatus').textContent = 'Câmera indisponível — registro seguirá sem foto.';
+    faceOk = true; // não trava o registro se não houver câmera
+    checarHabilitarBotao();
+  }
+}
+
+function avaliarCerca(){
+  if(!currentGeo || !currentUser.postoId){
+    document.getElementById('cercaStatus').innerHTML = '<span class="badge info">sem posto vinculado</span>';
+    dentroCerca = null;
+    checarHabilitarBotao();
+    return;
+  }
+  const posto = postosCache[currentUser.postoId];
+  if(!posto){ document.getElementById('cercaStatus').textContent='posto não encontrado'; checarHabilitarBotao(); return; }
+  const dist = haversine(currentGeo.lat, currentGeo.lng, posto.lat, posto.lng);
+  dentroCerca = dist <= posto.raio;
+  document.getElementById('cercaStatus').innerHTML = dentroCerca
+    ? `<span class="badge ok">dentro (${Math.round(dist)}m)</span>`
+    : `<span class="badge warn">fora — ${Math.round(dist)}m do posto</span>`;
+  checarHabilitarBotao();
+}
+
+async function loadFaceModels(){
+  if(modelsLoaded) return;
+  const base = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(base);
+  modelsLoaded = true;
+}
+
+let faceLoopActive=false;
+async function detectarRostoLoop(){
+  faceLoopActive = true;
+  const video = document.getElementById('camVideo');
+  const statusEl = document.getElementById('camStatus');
+  const faceStatusEl = document.getElementById('faceStatus');
+  while(faceLoopActive && document.getElementById('modalCaptura') && !document.getElementById('modalCaptura').classList.contains('hidden')){
+    try{
+      const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions());
+      if(det){
+        faceOk = true;
+        statusEl.textContent = 'Rosto detectado ✓';
+        faceStatusEl.innerHTML = '<span class="badge ok">detectado</span>';
+      } else {
+        faceOk = false;
+        statusEl.textContent = 'Centralize o rosto no círculo';
+        faceStatusEl.innerHTML = '<span class="badge warn">não detectado</span>';
+      }
+      checarHabilitarBotao();
+    }catch(e){ /* modelo ainda carregando */ }
+    await new Promise(r=>setTimeout(r,500));
+  }
+}
+
+function checarHabilitarBotao(){
+  const geoOk = !!currentGeo;
+  document.getElementById('btnConfirmarCaptura').disabled = !(geoOk && faceOk);
+}
+
+function fecharCaptura(){
+  faceLoopActive=false;
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  document.getElementById('modalCaptura').classList.add('hidden');
+}
+
+async function confirmarRegistro(){
+  const video = document.getElementById('camVideo');
+  const canvas = document.getElementById('camCanvas');
+  if(camStream){
+    canvas.width = video.videoWidth||320; canvas.height = video.videoHeight||240;
+    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+    currentFoto = canvas.toDataURL('image/jpeg',0.6);
+  }
+  const registro = {
+    colaboradorId: currentUser.id,
+    colaboradorNome: currentUser.nome,
+    tipo: currentTipoBater,
+    timestamp: Date.now(),
+    lat: currentGeo?currentGeo.lat:null,
+    lng: currentGeo?currentGeo.lng:null,
+    precisaoM: currentGeo?Math.round(currentGeo.acc):null,
+    dentroCerca: dentroCerca,
+    postoId: currentUser.postoId||null,
+    foto: currentFoto
+  };
+  try{
+    await db.ref('registros').push(registro);
+    fecharCaptura();
+    toast('Ponto registrado: ' + (LABEL_TIPO[currentTipoBater]||currentTipoBater));
+    carregarRegistrosHoje();
+  }catch(e){
+    document.getElementById('capturaErr').textContent = 'Falha ao salvar. Verifique a conexão.';
+  }
+}
+
+/* ============================================================
+   ADMIN — TABS
+   ============================================================ */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tabcontent').forEach(t=>t.classList.add('hidden'));
+  document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).classList.remove('hidden');
+  if(name==='dash') carregarDashboard();
+  if(name==='registros') carregarRelatorio();
+}
+
+function carregarDashboard(){
+  if(!db) return;
+  document.getElementById('kpiColab').textContent = Object.keys(colabCache).length;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const seteDias = Date.now() - 7*86400000;
+  db.ref('registros').once('value').then(snap=>{
+    const all = Object.values(snap.val()||{});
+    const hojeArr = all.filter(r=>r.timestamp>=hoje.getTime());
+    document.getElementById('kpiHoje').textContent = hojeArr.length;
+    const foraCerca = all.filter(r=>r.timestamp>=seteDias && r.dentroCerca===false).length;
+    document.getElementById('kpiForaCerca').textContent = foraCerca;
+
+    const recentes = [...all].sort((a,b)=>b.timestamp-a.timestamp).slice(0,15);
+    document.getElementById('tblRecente').querySelector('tbody').innerHTML = recentes.map(r=>`
+      <tr>
+        <td>${r.colaboradorNome||'—'}</td>
+        <td>${LABEL_TIPO[r.tipo]||r.tipo}</td>
+        <td>${new Date(r.timestamp).toLocaleString('pt-BR')}</td>
+        <td>${r.dentroCerca===false?'<span class="badge warn">fora</span>':r.dentroCerca===true?'<span class="badge ok">ok</span>':'—'}</td>
+        <td>${r.foto?'<span class="badge info">sim</span>':'—'}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="small">Sem registros.</td></tr>';
+
+    // horas extras do mês (soma simples)
+    const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
+    const doMes = all.filter(r=>r.timestamp>=inicioMes.getTime());
+    const porColabDia = {};
+    doMes.forEach(r=>{
+      const d = new Date(r.timestamp); d.setHours(0,0,0,0);
+      const key = r.colaboradorId+'_'+d.getTime();
+      if(!porColabDia[key]) porColabDia[key]={};
+      porColabDia[key][r.tipo]=r.timestamp;
+    });
+    let totalExtraMs=0;
+    Object.values(porColabDia).forEach(dia=>{ totalExtraMs += calcularHorasDia(dia).extraMs; });
+    document.getElementById('kpiExtras').textContent = fmtHoras(totalExtraMs);
+  });
+}
+
+function carregarRelatorio(){
+  if(!db) return;
+  const colabId = document.getElementById('filtroColab').value;
+  const mesInput = document.getElementById('filtroMes').value; // yyyy-mm
+  let ini, fim;
+  if(mesInput){
+    const [y,m] = mesInput.split('-').map(Number);
+    ini = new Date(y, m-1, 1).getTime();
+    fim = new Date(y, m, 1).getTime();
+  } else {
+    const now=new Date(); ini = new Date(now.getFullYear(), now.getMonth(),1).getTime(); fim = Date.now()+86400000;
+  }
+  db.ref('registros').once('value').then(snap=>{
+    let all = Object.values(snap.val()||{}).filter(r=>r.timestamp>=ini && r.timestamp<fim);
+    if(colabId) all = all.filter(r=>r.colaboradorId===colabId);
+    const porDia = {};
+    all.forEach(r=>{
+      const d = new Date(r.timestamp); d.setHours(0,0,0,0);
+      const key = r.colaboradorId+'_'+d.getTime();
+      if(!porDia[key]) porDia[key]={colaboradorNome:r.colaboradorNome, data:d, tipos:{}, foraCerca:false};
+      porDia[key].tipos[r.tipo]=r.timestamp;
+      if(r.dentroCerca===false) porDia[key].foraCerca=true;
+    });
+    const linhas = Object.values(porDia).sort((a,b)=>b.data-a.data);
+    document.getElementById('tblRegistros').querySelector('tbody').innerHTML = linhas.map(l=>{
+      const t = l.tipos;
+      const {trabalhadoMs, extraMs} = calcularHorasDia(t);
+      const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+      return `<tr>
+        <td>${l.colaboradorNome}</td>
+        <td>${l.data.toLocaleDateString('pt-BR')}</td>
+        <td>${hf(t.entrada)}</td><td>${hf(t.intervalo_inicio)}</td><td>${hf(t.intervalo_fim)}</td><td>${hf(t.saida)}</td>
+        <td>${fmtHoras(trabalhadoMs)}</td>
+        <td>${extraMs>0?fmtHoras(extraMs):'—'}</td>
+        <td>${l.foraCerca?'<span class="badge warn">alerta</span>':'<span class="badge ok">ok</span>'}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="9" class="small">Sem registros no período.</td></tr>';
+    window._ultimoRelatorio = linhas;
+  });
+}
+
+function exportarCSV(){
+  const linhas = window._ultimoRelatorio||[];
+  if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
+  const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'';
+  let csv = 'Colaborador;Data;Entrada;IntervaloInicio;IntervaloFim;Saida;HorasTrabalhadas;HorasExtras;ForaCerca\n';
+  linhas.forEach(l=>{
+    const {trabalhadoMs, extraMs} = calcularHorasDia(l.tipos);
+    csv += [l.colaboradorNome, l.data.toLocaleDateString('pt-BR'), hf(l.tipos.entrada), hf(l.tipos.intervalo_inicio), hf(l.tipos.intervalo_fim), hf(l.tipos.saida), fmtHoras(trabalhadoMs), fmtHoras(extraMs), l.foraCerca?'SIM':'NAO'].join(';') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'relatorio_ponto.csv';
+  a.click();
+}
+
+/* ============================================================
+   ADMIN — COLABORADORES
+   ============================================================ */
+function fillPostoSelect(){
+  const sel = document.getElementById('novoPosto');
+  if(!sel) return;
+  sel.innerHTML = Object.entries(postosCache).map(([id,p])=>`<option value="${id}">${p.nome}</option>`).join('') || '<option value="">Cadastre um posto primeiro</option>';
+}
+function fillFiltroColab(){
+  const sel = document.getElementById('filtroColab');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Todos</option>' + Object.entries(colabCache).map(([id,c])=>`<option value="${id}">${c.nome}</option>`).join('');
+}
+
+function criarColaborador(){
+  const nome = document.getElementById('novoNome').value.trim();
+  const matricula = document.getElementById('novoMat').value.trim();
+  const senha = document.getElementById('novoSenha').value;
+  const cargo = document.getElementById('novoCargo').value.trim();
+  const postoId = document.getElementById('novoPosto').value;
+  const errEl = document.getElementById('colabErr');
+  if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
+  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId}).then(()=>{
+    errEl.textContent='';
+    ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
+    toast('Colaborador cadastrado.');
+  });
+}
+
+function renderColabTable(){
+  const tb = document.getElementById('tblColab'); if(!tb) return;
+  tb.querySelector('tbody').innerHTML = Object.entries(colabCache).map(([id,c])=>`
+    <tr>
+      <td>${c.nome}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
+      <td>${postosCache[c.postoId]?.nome||'—'}</td>
+      <td><button class="btn-sm btn-danger" onclick="removerColaborador('${id}')">Remover</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="small">Nenhum colaborador.</td></tr>';
+}
+function removerColaborador(id){
+  if(confirm('Remover este colaborador?')) db.ref('colaboradores/'+id).remove();
+}
+
+/* ============================================================
+   ADMIN — POSTOS / CERCA VIRTUAL
+   ============================================================ */
+function usarMinhaLocalizacao(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('novoPostoLat').value = pos.coords.latitude;
+    document.getElementById('novoPostoLng').value = pos.coords.longitude;
+  }, ()=> toast('Não foi possível obter sua localização.'));
+}
+function criarPosto(){
+  const nome = document.getElementById('novoPostoNome').value.trim();
+  const raio = Number(document.getElementById('novoPostoRaio').value)||150;
+  const lat = Number(document.getElementById('novoPostoLat').value);
+  const lng = Number(document.getElementById('novoPostoLng').value);
+  if(!nome || !lat || !lng){ toast('Preencha nome e coordenadas do posto.'); return; }
+  db.ref('postos').push({nome, raio, lat, lng}).then(()=>{
+    toast('Posto salvo.');
+    ['novoPostoNome','novoPostoLat','novoPostoLng'].forEach(id=>document.getElementById(id).value='');
+  });
+}
+function renderPostosTable(){
+  const tb = document.getElementById('tblPostos'); if(!tb) return;
+  tb.querySelector('tbody').innerHTML = Object.entries(postosCache).map(([id,p])=>`
+    <tr>
+      <td>${p.nome}</td><td>${p.raio}m</td><td>${p.lat?.toFixed(5)}, ${p.lng?.toFixed(5)}</td>
+      <td><button class="btn-sm btn-danger" onclick="removerPosto('${id}')">Remover</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" class="small">Nenhum posto cadastrado.</td></tr>';
+}
+function removerPosto(id){
+  if(confirm('Remover este posto?')) db.ref('postos/'+id).remove();
+}
+
+/* ============================================================
+   ADMIN — CONFIG DE JORNADA
+   ============================================================ */
+function salvarConfigJornada(){
+  const cfg = {
+    jornada: Number(document.getElementById('cfgJornada').value)||8,
+    tolerancia: Number(document.getElementById('cfgTolerancia').value)||10,
+    noiteIni: document.getElementById('cfgNoiteIni').value,
+    noiteFim: document.getElementById('cfgNoiteFim').value,
+    pctExtra: Number(document.getElementById('cfgPctExtra').value)||50,
+    pctNoturno: Number(document.getElementById('cfgPctNoturno').value)||20
+  };
+  db.ref('config/jornada').set(cfg).then(()=>toast('Regras de jornada salvas.'));
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function toast(msg){
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3200);
+}
+</script>
+</body>
+</html>
