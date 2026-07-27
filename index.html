@@ -221,15 +221,16 @@ h3{font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--mu
 
   <div id="tabColab" class="tabcontent hidden">
     <div class="card">
-      <h3>Novo colaborador</h3>
+      <h3 id="colabFormTitulo">Novo colaborador</h3>
       <div class="grid2">
         <div><label>Nome</label><input id="novoNome"></div>
         <div><label>Matrícula</label><input id="novoMat"></div>
-        <div><label>Senha</label><input id="novoSenha" type="password"></div>
+        <div><label>Senha</label><input id="novoSenha" type="password" placeholder="Deixe em branco p/ manter"></div>
         <div><label>Cargo</label><input id="novoCargo" placeholder="Vigilante, Supervisor..."></div>
         <div style="grid-column:1/3;"><label>Posto</label><select id="novoPosto"></select></div>
       </div>
-      <button class="btn-main" onclick="criarColaborador()">Cadastrar</button>
+      <button class="btn-main" id="btnSalvarColab" onclick="criarColaborador()">Cadastrar</button>
+      <button class="btn-ghost hidden" id="btnCancelarEdicaoColab" onclick="cancelarEdicaoColab()">Cancelar edição</button>
       <div class="err" id="colabErr"></div>
     </div>
     <div class="card">
@@ -857,6 +858,8 @@ function fillFiltroColab(){
   sel.innerHTML = '<option value="">Todos</option>' + Object.entries(colabCache).map(([id,c])=>`<option value="${id}">${c.nome}</option>`).join('');
 }
 
+let editandoColabId = null;
+
 function criarColaborador(){
   const nome = document.getElementById('novoNome').value.trim();
   const matricula = document.getElementById('novoMat').value.trim();
@@ -864,6 +867,18 @@ function criarColaborador(){
   const cargo = document.getElementById('novoCargo').value.trim();
   const postoId = document.getElementById('novoPosto').value;
   const errEl = document.getElementById('colabErr');
+
+  if(editandoColabId){
+    if(!nome||!matricula){ errEl.textContent='Preencha nome e matrícula.'; return; }
+    const senhaFinal = senha ? senha : (colabCache[editandoColabId]?.senha || '');
+    db.ref('colaboradores/'+editandoColabId).set({nome,matricula,senha:senhaFinal,cargo,postoId}).then(()=>{
+      errEl.textContent='';
+      toast('Colaborador atualizado.');
+      cancelarEdicaoColab();
+    });
+    return;
+  }
+
   if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
   db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId}).then(()=>{
     errEl.textContent='';
@@ -872,13 +887,41 @@ function criarColaborador(){
   });
 }
 
+function editarColaborador(id){
+  const c = colabCache[id];
+  if(!c) return;
+  editandoColabId = id;
+  document.getElementById('novoNome').value = c.nome||'';
+  document.getElementById('novoMat').value = c.matricula||'';
+  document.getElementById('novoSenha').value = '';
+  document.getElementById('novoCargo').value = c.cargo||'';
+  document.getElementById('novoPosto').value = c.postoId||'';
+  document.getElementById('colabFormTitulo').textContent = 'Editando: ' + c.nome;
+  document.getElementById('btnSalvarColab').textContent = 'Salvar alterações';
+  document.getElementById('btnCancelarEdicaoColab').classList.remove('hidden');
+  document.getElementById('colabErr').textContent='';
+  document.getElementById('tabColab').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelarEdicaoColab(){
+  editandoColabId = null;
+  ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('novoPosto').value='';
+  document.getElementById('colabFormTitulo').textContent = 'Novo colaborador';
+  document.getElementById('btnSalvarColab').textContent = 'Cadastrar';
+  document.getElementById('btnCancelarEdicaoColab').classList.add('hidden');
+}
+
 function renderColabTable(){
   const tb = document.getElementById('tblColab'); if(!tb) return;
   tb.querySelector('tbody').innerHTML = Object.entries(colabCache).map(([id,c])=>`
     <tr>
       <td>${c.nome}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
       <td>${postosCache[c.postoId]?.nome||'—'}</td>
-      <td><button class="btn-sm btn-danger" onclick="removerColaborador('${id}')">Remover</button></td>
+      <td class="flex">
+        <button class="btn-sm" onclick="editarColaborador('${id}')">Editar</button>
+        <button class="btn-sm btn-danger" onclick="removerColaborador('${id}')">Remover</button>
+      </td>
     </tr>`).join('') || '<tr><td colspan="5" class="small">Nenhum colaborador.</td></tr>';
 }
 function removerColaborador(id){
@@ -889,10 +932,19 @@ function removerColaborador(id){
    ADMIN — POSTOS / CERCA VIRTUAL
    ============================================================ */
 function usarMinhaLocalizacao(){
+  if(!navigator.geolocation){ toast('Seu navegador não suporta geolocalização.'); return; }
+  toast('Buscando localização…');
   navigator.geolocation.getCurrentPosition(pos=>{
     document.getElementById('novoPostoLat').value = pos.coords.latitude;
     document.getElementById('novoPostoLng').value = pos.coords.longitude;
-  }, ()=> toast('Não foi possível obter sua localização.'));
+    toast(`Localização encontrada (precisão ±${Math.round(pos.coords.accuracy)}m)`);
+  }, err=>{
+    let msg = 'Não foi possível obter sua localização.';
+    if(err.code===1) msg = 'Permissão de localização negada — ative nas configurações do navegador/site.';
+    if(err.code===2) msg = 'Localização indisponível — verifique se o GPS está ligado.';
+    if(err.code===3) msg = 'Tempo esgotado buscando localização — tente novamente em local aberto.';
+    toast(msg);
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
 }
 function criarPosto(){
   const nome = document.getElementById('novoPostoNome').value.trim();
