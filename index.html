@@ -96,6 +96,14 @@ select[multiple]{height:auto;}
 .modal-bg .card{width:100%; max-width:480px; border-radius:20px 20px 0 0; max-height:88vh; overflow-y:auto; position:relative; margin:0; border-bottom:none;}
 h2{font-size:17px; margin:0 0 4px; font-weight:800; letter-spacing:-.2px;}
 h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted-dim); margin:0 0 14px; font-weight:800;}
+
+/* ── Rodapé de marca PJ Tecnologia e Sistemas ── */
+.pj-footer{display:flex; align-items:center; justify-content:center; gap:10px; padding:22px 10px 10px; margin-top:6px; opacity:.9;}
+.pj-footer-hex{width:24px; height:26px; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(0,200,248,.35));}
+.pj-footer-text{display:flex; flex-direction:column; line-height:1.35;}
+.pj-footer-brand{font-size:11px; font-weight:800; letter-spacing:.4px; color:var(--muted); text-transform:uppercase;}
+.pj-footer-brand b{color:#3ecbf5; font-weight:800;}
+.pj-footer-tag{font-size:9px; letter-spacing:.6px; color:var(--muted-dim); text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -122,6 +130,16 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
     <p class="small">Cole a config do seu projeto Firebase (mesma base do app de ponto atual). Fica salva só neste navegador.</p>
     <textarea id="fbConfigInput" rows="7" style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:monospace;font-size:12px;" placeholder='{"apiKey":"...","databaseURL":"https://SEU-PROJETO.firebaseio.com","projectId":"..."}'></textarea>
     <button class="btn-main" onclick="saveFirebaseConfig()">Salvar e conectar</button>
+  </div>
+
+  <div class="pj-footer">
+    <svg class="pj-footer-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="#0a1626" stroke="#00c8f8" stroke-width="5"/>
+    </svg>
+    <div class="pj-footer-text">
+      <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
+      <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
+    </div>
   </div>
 </div>
 
@@ -158,6 +176,16 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
     <div class="info-row"><span>Horas trabalhadas</span><span id="mesTrabalhadas">0h00</span></div>
     <div class="info-row"><span>Jornada prevista</span><span id="mesPrevista">0h00</span></div>
     <div class="info-row"><span>Saldo</span><span id="mesSaldo">0h00</span></div>
+  </div>
+
+  <div class="pj-footer">
+    <svg class="pj-footer-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="#0a1626" stroke="#00c8f8" stroke-width="5"/>
+    </svg>
+    <div class="pj-footer-text">
+      <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
+      <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
+    </div>
   </div>
 </div>
 
@@ -237,6 +265,15 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
   <div id="tabColab" class="tabcontent hidden">
     <div class="card">
       <h3 id="colabFormTitulo">Novo colaborador</h3>
+      <label>Foto</label>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div id="colabFotoPreview" style="width:64px;height:64px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:var(--muted-dim);font-size:11px;text-align:center;">Sem foto</div>
+        <div class="flex" style="flex-wrap:wrap;">
+          <button type="button" class="btn-sm" onclick="document.getElementById('inputFotoColab').click()">Tirar / enviar foto</button>
+          <button type="button" class="btn-sm btn-danger hidden" id="btnRemoverFotoColab" onclick="removerFotoColabForm()">Remover foto</button>
+        </div>
+        <input type="file" id="inputFotoColab" accept="image/*" capture="user" class="hidden" onchange="onFotoColabSelecionada(event)">
+      </div>
       <div class="grid2">
         <div><label>Nome</label><input id="novoNome"></div>
         <div><label>Matrícula</label><input id="novoMat"></div>
@@ -250,7 +287,7 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
     </div>
     <div class="card">
       <div class="table-scroll">
-        <table id="tblColab"><thead><tr><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Posto</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tblColab"><thead><tr><th></th><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Posto</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
   </div>
@@ -289,6 +326,16 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
       </div>
       <button class="btn-main" onclick="salvarConfigJornada()">Salvar regras</button>
       <p class="small">Essas regras alimentam o cálculo de horas extras e banco de horas exibido para colaboradores e no dashboard.</p>
+    </div>
+  </div>
+
+  <div class="pj-footer">
+    <svg class="pj-footer-hex" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,4 96,28 96,82 50,106 4,82 4,28" fill="#0a1626" stroke="#00c8f8" stroke-width="5"/>
+    </svg>
+    <div class="pj-footer-text">
+      <span class="pj-footer-brand">PJ <b>Tecnologia</b> e Sistemas</span>
+      <span class="pj-footer-tag">Inovação que conecta. Tecnologia que transforma.</span>
     </div>
   </div>
 </div>
@@ -847,7 +894,8 @@ function exportarCSV(){
   const linhas = window._ultimoRelatorio||[];
   if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
   const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'';
-  let csv = 'Colaborador;Data;Entrada;IntervaloInicio;IntervaloFim;Saida;HorasTrabalhadas;HorasExtras;ForaCerca\n';
+  let csv = 'PJ Tecnologia e Sistemas — Relatorio de Ponto (Ponto MS)\n';
+  csv += 'Colaborador;Data;Entrada;IntervaloInicio;IntervaloFim;Saida;HorasTrabalhadas;HorasExtras;ForaCerca\n';
   linhas.forEach(l=>{
     const {trabalhadoMs, extraMs} = calcularHorasDia(l.tipos);
     csv += [l.colaboradorNome, l.data.toLocaleDateString('pt-BR'), hf(l.tipos.entrada), hf(l.tipos.intervalo_inicio), hf(l.tipos.intervalo_fim), hf(l.tipos.saida), fmtHoras(trabalhadoMs), fmtHoras(extraMs), l.foraCerca?'SIM':'NAO'].join(';') + '\n';
@@ -874,6 +922,48 @@ function fillFiltroColab(){
 }
 
 let editandoColabId = null;
+let colabFotoData = null; // dataURL da foto atual no formulário
+
+function renderColabFotoPreview(){
+  const prev = document.getElementById('colabFotoPreview');
+  const btnRemover = document.getElementById('btnRemoverFotoColab');
+  if(colabFotoData){
+    prev.innerHTML = `<img src="${colabFotoData}" style="width:100%;height:100%;object-fit:cover;">`;
+    btnRemover.classList.remove('hidden');
+  } else {
+    prev.innerHTML = 'Sem foto';
+    btnRemover.classList.add('hidden');
+  }
+}
+
+function onFotoColabSelecionada(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      // redimensiona/comprime para caber bem no Firebase Realtime Database
+      const maxLado = 300;
+      let w = img.width, h = img.height;
+      if(w>h && w>maxLado){ h = Math.round(h*(maxLado/w)); w = maxLado; }
+      else if(h>=w && h>maxLado){ w = Math.round(w*(maxLado/h)); h = maxLado; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      colabFotoData = canvas.toDataURL('image/jpeg',0.7);
+      renderColabFotoPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  ev.target.value = '';
+}
+
+function removerFotoColabForm(){
+  colabFotoData = null;
+  renderColabFotoPreview();
+}
 
 function criarColaborador(){
   const nome = document.getElementById('novoNome').value.trim();
@@ -881,12 +971,13 @@ function criarColaborador(){
   const senha = document.getElementById('novoSenha').value;
   const cargo = document.getElementById('novoCargo').value.trim();
   const postoId = document.getElementById('novoPosto').value;
+  const foto = colabFotoData || null;
   const errEl = document.getElementById('colabErr');
 
   if(editandoColabId){
     if(!nome||!matricula){ errEl.textContent='Preencha nome e matrícula.'; return; }
     const senhaFinal = senha ? senha : (colabCache[editandoColabId]?.senha || '');
-    db.ref('colaboradores/'+editandoColabId).set({nome,matricula,senha:senhaFinal,cargo,postoId}).then(()=>{
+    db.ref('colaboradores/'+editandoColabId).set({nome,matricula,senha:senhaFinal,cargo,postoId,foto}).then(()=>{
       errEl.textContent='';
       toast('Colaborador atualizado.');
       cancelarEdicaoColab();
@@ -895,9 +986,11 @@ function criarColaborador(){
   }
 
   if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
-  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId}).then(()=>{
+  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId,foto}).then(()=>{
     errEl.textContent='';
     ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
+    colabFotoData = null;
+    renderColabFotoPreview();
     toast('Colaborador cadastrado.');
   });
 }
@@ -911,6 +1004,8 @@ function editarColaborador(id){
   document.getElementById('novoSenha').value = '';
   document.getElementById('novoCargo').value = c.cargo||'';
   document.getElementById('novoPosto').value = c.postoId||'';
+  colabFotoData = c.foto || null;
+  renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Editando: ' + c.nome;
   document.getElementById('btnSalvarColab').textContent = 'Salvar alterações';
   document.getElementById('btnCancelarEdicaoColab').classList.remove('hidden');
@@ -922,6 +1017,8 @@ function cancelarEdicaoColab(){
   editandoColabId = null;
   ['novoNome','novoMat','novoSenha','novoCargo'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('novoPosto').value='';
+  colabFotoData = null;
+  renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Novo colaborador';
   document.getElementById('btnSalvarColab').textContent = 'Cadastrar';
   document.getElementById('btnCancelarEdicaoColab').classList.add('hidden');
@@ -931,13 +1028,14 @@ function renderColabTable(){
   const tb = document.getElementById('tblColab'); if(!tb) return;
   tb.querySelector('tbody').innerHTML = Object.entries(colabCache).map(([id,c])=>`
     <tr>
+      <td>${c.foto?`<img src="${c.foto}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;">`:'<span class="small">—</span>'}</td>
       <td>${c.nome}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
       <td>${postosCache[c.postoId]?.nome||'—'}</td>
       <td class="flex">
         <button class="btn-sm" onclick="editarColaborador('${id}')">Editar</button>
         <button class="btn-sm btn-danger" onclick="removerColaborador('${id}')">Remover</button>
       </td>
-    </tr>`).join('') || '<tr><td colspan="5" class="small">Nenhum colaborador.</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6" class="small">Nenhum colaborador.</td></tr>';
 }
 function removerColaborador(id){
   if(confirm('Remover este colaborador?')) db.ref('colaboradores/'+id).remove();
