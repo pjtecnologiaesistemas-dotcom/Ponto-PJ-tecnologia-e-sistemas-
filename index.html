@@ -7,6 +7,9 @@
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUG9udG8gTVMiLCJzaG9ydF9uYW1lIjoiUG9udG8gTVMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBiMTIxYSIsInRoZW1lX2NvbG9yIjoiIzBiMTIxYSJ9">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 :root{
@@ -174,7 +177,16 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
   .wrap.wide{max-width:1320px;}
 }
 
-/* ── Localização do registro (entrada / saída) ── */
+/* ── Filtros dinâmicos (Histórico / Registros) ── */
+.chip-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+.chip{background:var(--bg2); border:1px solid var(--line); color:var(--muted); font-size:12px; font-weight:700; padding:7px 14px; border-radius:20px; cursor:pointer;}
+.chip:hover{border-color:var(--accent); color:var(--text);}
+.filtro-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center;}
+.filtro-actions .btn-main{flex:0 0 auto; padding-left:20px; padding-right:20px;}
+.btn-pdf{background:#c0392b; border-color:#c0392b; color:#fff;}
+.btn-xls{background:#1b7a43; border-color:#1b7a43; color:#fff;}
+.loc-link{color:var(--info); text-decoration:none; font-size:12px;}
+.loc-link:hover{text-decoration:underline;}
 .registro-item{padding:2px 0;}
 .registro-item:not(:last-child){border-bottom:1px solid var(--line-soft);}
 .registro-item .info-row{border-bottom:none; padding-bottom:4px;}
@@ -481,16 +493,43 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 
   <div id="tabRegistros" class="tabcontent hidden">
     <div class="card">
-      <div class="grid2">
-        <div><label>Colaborador</label><select id="filtroColab"><option value="">Todos</option></select></div>
-        <div><label>Mês</label><input type="month" id="filtroMes"></div>
+      <h3>🔍 Filtros dinâmicos</h3>
+      <label>Colaborador</label>
+      <select id="filtroColab"><option value="">Todos os colaboradores</option></select>
+      <label>Posto</label>
+      <select id="filtroPosto"><option value="">Todos os postos</option></select>
+      <label>Tipo de registro</label>
+      <select id="filtroTipo">
+        <option value="">Todos os registros</option>
+        <option value="entrada_saida">Entrada e Saída</option>
+        <option value="entrada">Somente entrada</option>
+        <option value="saida">Somente saída</option>
+      </select>
+      <label>Busca livre</label>
+      <input id="filtroBusca" placeholder="🔎 Busca livre por nome...">
+      <div class="grid2" style="margin-top:2px;">
+        <div><label>De</label><input type="date" id="filtroDe"></div>
+        <div><label>Até</label><input type="date" id="filtroAte"></div>
       </div>
-      <button class="btn-sm" style="margin-top:12px;" onclick="carregarRelatorio()">Aplicar filtro</button>
-      <button class="btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+      <div class="chip-row">
+        <button class="chip" onclick="presetPeriodo('hoje')">Hoje</button>
+        <button class="chip" onclick="presetPeriodo('ontem')">Ontem</button>
+        <button class="chip" onclick="presetPeriodo('semana')">Esta semana</button>
+        <button class="chip" onclick="presetPeriodo('mes')">Este mês</button>
+        <button class="chip" onclick="presetPeriodo('7d')">7 dias</button>
+        <button class="chip" onclick="presetPeriodo('30d')">30 dias</button>
+      </div>
+      <div class="filtro-actions">
+        <button class="btn-main" style="margin-top:0;" onclick="carregarRelatorio()">Aplicar filtro</button>
+        <button class="btn-sm btn-pdf" onclick="exportarPDF()">📄 PDF</button>
+        <button class="btn-sm btn-xls" onclick="exportarExcel()">📊 Excel</button>
+        <button class="btn-ghost" onclick="limparFiltrosHistorico()">Limpar filtros</button>
+      </div>
+      <div class="small" id="contagemRegistros" style="margin-top:12px;">0 registros</div>
     </div>
     <div class="card">
       <div class="table-scroll">
-        <table id="tblRegistros"><thead><tr><th>Colaborador</th><th>Data</th><th>Entrada</th><th>Int.Início</th><th>Int.Fim</th><th>Saída</th><th>Trab.</th><th>Extra</th><th>Cerca</th></tr></thead><tbody></tbody></table>
+        <table id="tblRegistros"><thead><tr><th>Data</th><th>Colaborador</th><th>Posto</th><th>Entrada</th><th>Saída</th><th>Duração</th><th>Localização</th><th>Ações</th></tr></thead><tbody></tbody></table>
       </div>
     </div>
   </div>
@@ -512,6 +551,12 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
         <div><label>Matrícula (CPF)</label><input id="novoMat"></div>
         <div><label>Senha</label><input id="novoSenha" type="password" placeholder="Deixe em branco p/ manter"></div>
         <div><label>Cargo</label><input id="novoCargo" placeholder="Vigilante, Supervisor..."></div>
+        <div><label>Intervalo (almoço)?</label>
+          <select id="novoUsaIntervalo">
+            <option value="sim">Sim — entrada, intervalo e saída</option>
+            <option value="nao">Não — só entrada e saída</option>
+          </select>
+        </div>
         <div><label>Telefone</label><input id="novoTelefone" placeholder="(00) 00000-0000" maxlength="15" inputmode="numeric" oninput="mascaraTelefone(this)"></div>
         <div><label>Estado civil</label>
           <select id="novoEstadoCivil">
@@ -532,7 +577,7 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
     </div>
     <div class="card">
       <div class="table-scroll">
-        <table id="tblColab"><thead><tr><th></th><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Posto</th><th></th></tr></thead><tbody></tbody></table>
+        <table id="tblColab"><thead><tr><th></th><th>Nome</th><th>Matrícula</th><th>Cargo</th><th>Posto</th><th>Intervalo</th><th></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
   </div>
@@ -757,7 +802,7 @@ function saveFirebaseConfig(){
 
 function loadGlobalData(){
   if(!db) return;
-  db.ref('postos').on('value', snap=>{ postosCache = snap.val()||{}; renderPostosTable(); fillPostoSelect(); });
+  db.ref('postos').on('value', snap=>{ postosCache = snap.val()||{}; renderPostosTable(); fillPostoSelect(); fillFiltroPosto(); });
   db.ref('colaboradores').on('value', snap=>{ colabCache = snap.val()||{}; renderColabTable(); fillFiltroColab(); });
   db.ref('config/jornada').on('value', snap=>{
     if(snap.val()) cfgJornada = snap.val();
@@ -981,8 +1026,10 @@ function tickClock(){
 /* ============================================================
    REGISTROS DO COLABORADOR
    ============================================================ */
-const ORDEM_TIPOS = ['entrada','intervalo_inicio','intervalo_fim','saida'];
 const LABEL_TIPO = {entrada:'Entrada', intervalo_inicio:'Início do intervalo', intervalo_fim:'Fim do intervalo', saida:'Saída'};
+function ordemTiposColab(){
+  return (currentUser && currentUser.usaIntervalo===false) ? ['entrada','saida'] : ['entrada','intervalo_inicio','intervalo_fim','saida'];
+}
 
 function carregarRegistrosHoje(){
   if(!db || !currentUser) return;
@@ -991,12 +1038,13 @@ function carregarRegistrosHoje(){
     const all = snap.val()||{};
     const hojeArr = Object.values(all).filter(r=>r.timestamp>=hoje.getTime()).sort((a,b)=>a.timestamp-b.timestamp);
     renderRegistrosHoje(hojeArr);
-    const proximo = ORDEM_TIPOS[hojeArr.length] || 'entrada (novo dia)';
+    const ordem = ordemTiposColab();
+    const proximo = ordem[hojeArr.length % ordem.length];
     document.getElementById('proximoTipo').textContent = 'Próximo registro: ' + (LABEL_TIPO[proximo]||proximo);
-    currentTipoBater = ORDEM_TIPOS[hojeArr.length % ORDEM_TIPOS.length];
+    currentTipoBater = ordem[hojeArr.length % ordem.length];
     const pill = document.getElementById('statusPill');
-    const trabalhando = hojeArr.length%4===1 || hojeArr.length%4===3;
-    if(hojeArr.length>0 && hojeArr.length<4){
+    const resto = hojeArr.length % ordem.length;
+    if(hojeArr.length>0 && resto!==0){
       pill.className='status-pill on'; pill.innerHTML='<span class="dot"></span> Em expediente';
     } else {
       pill.className='status-pill off'; pill.innerHTML='<span class="dot"></span> Fora de expediente';
@@ -1302,62 +1350,153 @@ function carregarDashboard(){
   });
 }
 
+function fillFiltroPosto(){
+  const sel = document.getElementById('filtroPosto');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Todos os postos</option>' + Object.entries(postosCache).map(([id,p])=>`<option value="${id}">${p.nome}</option>`).join('');
+}
+
+function presetPeriodo(tipo){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  let de = new Date(hoje), ate = new Date(hoje);
+  if(tipo==='ontem'){ de.setDate(de.getDate()-1); ate.setDate(ate.getDate()-1); }
+  else if(tipo==='semana'){ de.setDate(de.getDate()-de.getDay()); }
+  else if(tipo==='mes'){ de.setDate(1); }
+  else if(tipo==='7d'){ de.setDate(de.getDate()-6); }
+  else if(tipo==='30d'){ de.setDate(de.getDate()-29); }
+  const fmt = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('filtroDe').value = fmt(de);
+  document.getElementById('filtroAte').value = fmt(ate);
+  carregarRelatorio();
+}
+
+function limparFiltrosHistorico(){
+  document.getElementById('filtroColab').value = '';
+  document.getElementById('filtroPosto').value = '';
+  document.getElementById('filtroTipo').value = '';
+  document.getElementById('filtroBusca').value = '';
+  document.getElementById('filtroDe').value = '';
+  document.getElementById('filtroAte').value = '';
+  carregarRelatorio();
+}
+
 function carregarRelatorio(){
   if(!db) return;
   const colabId = document.getElementById('filtroColab').value;
-  const mesInput = document.getElementById('filtroMes').value; // yyyy-mm
+  const postoId = document.getElementById('filtroPosto').value;
+  const tipoFiltro = document.getElementById('filtroTipo').value;
+  const busca = document.getElementById('filtroBusca').value.trim().toLowerCase();
+  const deStr = document.getElementById('filtroDe').value;
+  const ateStr = document.getElementById('filtroAte').value;
   let ini, fim;
-  if(mesInput){
-    const [y,m] = mesInput.split('-').map(Number);
-    ini = new Date(y, m-1, 1).getTime();
-    fim = new Date(y, m, 1).getTime();
-  } else {
-    const now=new Date(); ini = new Date(now.getFullYear(), now.getMonth(),1).getTime(); fim = Date.now()+86400000;
-  }
+  if(deStr){ const [y,m,d] = deStr.split('-').map(Number); ini = new Date(y,m-1,d).getTime(); }
+  else { const now=new Date(); ini = new Date(now.getFullYear(), now.getMonth(),1).getTime(); }
+  if(ateStr){ const [y,m,d] = ateStr.split('-').map(Number); fim = new Date(y,m-1,d+1).getTime(); }
+  else { fim = Date.now()+86400000; }
+
   db.ref('registros').once('value').then(snap=>{
     let all = Object.values(snap.val()||{}).filter(r=>r.timestamp>=ini && r.timestamp<fim);
     if(colabId) all = all.filter(r=>r.colaboradorId===colabId);
+    if(postoId) all = all.filter(r=>r.postoId===postoId);
+    if(busca) all = all.filter(r=>(r.colaboradorNome||'').toLowerCase().includes(busca));
+
     const porDia = {};
     all.forEach(r=>{
       const d = new Date(r.timestamp); d.setHours(0,0,0,0);
       const key = r.colaboradorId+'_'+d.getTime();
-      if(!porDia[key]) porDia[key]={colaboradorNome:r.colaboradorNome, data:d, tipos:{}, foraCerca:false};
+      if(!porDia[key]) porDia[key]={colaboradorNome:r.colaboradorNome, data:d, tipos:{}, foraCerca:false, postoId:r.postoId||null, lat:null, lng:null, precisaoM:null};
       porDia[key].tipos[r.tipo]=r.timestamp;
       if(r.dentroCerca===false) porDia[key].foraCerca=true;
+      if(!porDia[key].postoId && r.postoId) porDia[key].postoId = r.postoId;
+      if((r.tipo==='entrada' || (r.tipo==='saida' && porDia[key].lat==null)) && r.lat!=null){
+        porDia[key].lat = r.lat; porDia[key].lng = r.lng; porDia[key].precisaoM = r.precisaoM;
+      }
     });
-    const linhas = Object.values(porDia).sort((a,b)=>b.data-a.data);
+    let linhas = Object.values(porDia).sort((a,b)=>b.data-a.data);
+
+    if(tipoFiltro==='entrada_saida') linhas = linhas.filter(l=>l.tipos.entrada && l.tipos.saida);
+    else if(tipoFiltro==='entrada') linhas = linhas.filter(l=>l.tipos.entrada);
+    else if(tipoFiltro==='saida') linhas = linhas.filter(l=>l.tipos.saida);
+
+    document.getElementById('contagemRegistros').textContent = linhas.length + (linhas.length===1 ? ' registro' : ' registros');
+
     document.getElementById('tblRegistros').querySelector('tbody').innerHTML = linhas.map(l=>{
       const t = l.tipos;
-      const {trabalhadoMs, extraMs} = calcularHorasDia(t);
+      const {trabalhadoMs} = calcularHorasDia(t);
       const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+      const postoNome = postosCache[l.postoId]?.nome || '—';
+      let localCel = '—';
+      if(l.lat!=null){
+        const badge = l.foraCerca ? '<span class="badge warn">fora</span>' : '<span class="badge ok">ok</span>';
+        localCel = `<a class="loc-link" href="https://www.google.com/maps?q=${l.lat},${l.lng}" target="_blank" rel="noopener">📍 ${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}${l.precisaoM?` (±${l.precisaoM}m)`:''}</a> ${badge}`;
+      }
+      const acao = l.lat!=null ? `<button class="btn-sm" onclick="window.open('https://www.google.com/maps?q=${l.lat},${l.lng}','_blank')">🗺️</button>` : '—';
       return `<tr>
-        <td>${l.colaboradorNome}</td>
         <td>${l.data.toLocaleDateString('pt-BR')}</td>
-        <td>${hf(t.entrada)}</td><td>${hf(t.intervalo_inicio)}</td><td>${hf(t.intervalo_fim)}</td><td>${hf(t.saida)}</td>
-        <td>${fmtHoras(trabalhadoMs)}</td>
-        <td>${extraMs>0?fmtHoras(extraMs):'—'}</td>
-        <td>${l.foraCerca?'<span class="badge warn">alerta</span>':'<span class="badge ok">ok</span>'}</td>
+        <td>${l.colaboradorNome}</td>
+        <td>${postoNome}</td>
+        <td>${hf(t.entrada)}</td>
+        <td>${hf(t.saida)}</td>
+        <td>${(t.entrada && t.saida) ? fmtHoras(trabalhadoMs) : '—'}</td>
+        <td>${localCel}</td>
+        <td>${acao}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="9" class="small">Sem registros no período.</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="small">Sem registros no período.</td></tr>';
     window._ultimoRelatorio = linhas;
   });
 }
 
-function exportarCSV(){
+function exportarExcel(){
   const linhas = window._ultimoRelatorio||[];
   if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
   const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'';
-  let csv = 'PJ Tecnologia e Sistemas — Relatorio de Ponto (Ponto MS)\n';
-  csv += 'Colaborador;Data;Entrada;IntervaloInicio;IntervaloFim;Saida;HorasTrabalhadas;HorasExtras;ForaCerca\n';
-  linhas.forEach(l=>{
-    const {trabalhadoMs, extraMs} = calcularHorasDia(l.tipos);
-    csv += [l.colaboradorNome, l.data.toLocaleDateString('pt-BR'), hf(l.tipos.entrada), hf(l.tipos.intervalo_inicio), hf(l.tipos.intervalo_fim), hf(l.tipos.saida), fmtHoras(trabalhadoMs), fmtHoras(extraMs), l.foraCerca?'SIM':'NAO'].join(';') + '\n';
+  const dados = linhas.map(l=>{
+    const {trabalhadoMs} = calcularHorasDia(l.tipos);
+    return {
+      Data: l.data.toLocaleDateString('pt-BR'),
+      Colaborador: l.colaboradorNome,
+      Posto: postosCache[l.postoId]?.nome || '—',
+      Entrada: hf(l.tipos.entrada),
+      Saida: hf(l.tipos.saida),
+      Duracao: (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '',
+      Localizacao: l.lat!=null ? `${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}` : '',
+      ForaCerca: l.foraCerca ? 'SIM' : 'NAO'
+    };
   });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'relatorio_ponto.csv';
-  a.click();
+  const ws = XLSX.utils.json_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Historico');
+  XLSX.writeFile(wb, 'historico_ponto.xlsx');
+}
+
+function exportarPDF(){
+  const linhas = window._ultimoRelatorio||[];
+  if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape'});
+  doc.setFontSize(14);
+  doc.text('PJ Tecnologia e Sistemas — Histórico de Ponto', 14, 16);
+  const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'—';
+  const body = linhas.map(l=>{
+    const {trabalhadoMs} = calcularHorasDia(l.tipos);
+    return [
+      l.data.toLocaleDateString('pt-BR'),
+      l.colaboradorNome,
+      postosCache[l.postoId]?.nome || '—',
+      hf(l.tipos.entrada),
+      hf(l.tipos.saida),
+      (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '—',
+      l.foraCerca ? 'Fora' : 'OK'
+    ];
+  });
+  doc.autoTable({
+    startY: 22,
+    head: [['Data','Colaborador','Posto','Entrada','Saída','Duração','Cerca']],
+    body,
+    styles:{fontSize:8},
+    headStyles:{fillColor:[13,56,120]}
+  });
+  doc.save('historico_ponto.pdf');
 }
 
 /* ============================================================
@@ -1438,6 +1577,7 @@ function criarColaborador(){
   const matricula = document.getElementById('novoMat').value.trim();
   const senha = document.getElementById('novoSenha').value;
   const cargo = document.getElementById('novoCargo').value.trim();
+  const usaIntervalo = document.getElementById('novoUsaIntervalo').value !== 'nao';
   const postoId = document.getElementById('novoPosto').value;
   const telefone = document.getElementById('novoTelefone').value.trim();
   const endereco = document.getElementById('novoEndereco').value.trim();
@@ -1450,7 +1590,7 @@ function criarColaborador(){
     const existente = colabCache[editandoColabId] || {};
     const senhaFinal = senha ? senha : (existente.senha || '');
     const senhaTemporaria = senha ? false : (existente.senhaTemporaria || false);
-    db.ref('colaboradores/'+editandoColabId).set({...existente, nome,matricula,senha:senhaFinal,senhaTemporaria,cargo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
+    db.ref('colaboradores/'+editandoColabId).set({...existente, nome,matricula,senha:senhaFinal,senhaTemporaria,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
       errEl.textContent='';
       toast('Colaborador atualizado.');
       cancelarEdicaoColab();
@@ -1459,10 +1599,11 @@ function criarColaborador(){
   }
 
   if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
-  db.ref('colaboradores').push({nome,matricula,senha,cargo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
+  db.ref('colaboradores').push({nome,matricula,senha,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
     errEl.textContent='';
     ['novoNome','novoMat','novoSenha','novoCargo','novoTelefone','novoEndereco'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('novoEstadoCivil').value='';
+    document.getElementById('novoUsaIntervalo').value='sim';
     colabFotoData = null;
     renderColabFotoPreview();
     toast('Colaborador cadastrado.');
@@ -1477,6 +1618,7 @@ function editarColaborador(id){
   document.getElementById('novoMat').value = c.matricula||'';
   document.getElementById('novoSenha').value = '';
   document.getElementById('novoCargo').value = c.cargo||'';
+  document.getElementById('novoUsaIntervalo').value = c.usaIntervalo===false ? 'nao' : 'sim';
   document.getElementById('novoPosto').value = c.postoId||'';
   document.getElementById('novoTelefone').value = c.telefone||'';
   document.getElementById('novoEndereco').value = c.endereco||'';
@@ -1509,11 +1651,12 @@ function renderColabTable(){
       <td>${c.foto?`<img src="${c.foto}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;">`:'<span class="small">—</span>'}</td>
       <td>${c.nome}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
       <td>${postosCache[c.postoId]?.nome||'—'}</td>
+      <td>${c.usaIntervalo===false?'<span class="badge info">não</span>':'<span class="badge ok">sim</span>'}</td>
       <td class="flex">
         <button class="btn-sm" onclick="editarColaborador('${id}')">Editar</button>
         <button class="btn-sm btn-danger" onclick="removerColaborador('${id}')">Remover</button>
       </td>
-    </tr>`).join('') || '<tr><td colspan="6" class="small">Nenhum colaborador.</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="7" class="small">Nenhum colaborador.</td></tr>';
 }
 function removerColaborador(id){
   if(confirm('Remover este colaborador?')) db.ref('colaboradores/'+id).remove();
