@@ -13,12 +13,12 @@
 <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 :root{
-  --bg:#05080c; --bg2:#0a0f16; --panel:#1a2531; --panel2:#22303e;
-  --line:#324656; --line-soft:#233241; --text:#f4f8fb; --muted:#9fb0c0; --muted-dim:#68798a;
+  --bg:#03050a; --bg2:#0a0f16; --panel:#182330; --panel2:#22303e;
+  --line:#3d5468; --line-soft:#2a3b4b; --text:#ffffff; --muted:#bccbd9; --muted-dim:#7d90a2;
   --accent:#f5a623; --accent2:#ff7a3d; --accent-soft:#3a2a12;
-  --ok:#2fbf82; --ok-soft:#0f2a20; --warn:#ef4a56; --warn-soft:#301315; --info:#4aa8e0; --info-soft:#102734;
+  --ok:#3ddb96; --ok-soft:#0f2a20; --warn:#ff5c68; --warn-soft:#301315; --info:#5cb8ee; --info-soft:#102734;
   --radius:16px; --radius-sm:10px;
-  --shadow:0 12px 34px -14px rgba(0,0,0,.7);
+  --shadow:0 12px 34px -14px rgba(0,0,0,.8);
   font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -66,9 +66,9 @@ button:active{transform:scale(.97);}
 .info-row span:first-child{color:var(--muted); font-weight:500;}
 .info-row span:last-child{font-weight:600;}
 .badge{padding:4px 10px; border-radius:7px; font-size:11px; font-weight:800; letter-spacing:.2px;}
-.badge.ok{background:var(--ok-soft); color:var(--ok); border:1px solid #164b34;}
-.badge.warn{background:var(--warn-soft); color:#ff8b92; border:1px solid #4a1c20;}
-.badge.info{background:var(--info-soft); color:var(--info); border:1px solid #17415a;}
+.badge.ok{background:var(--ok-soft); color:var(--ok); border:1px solid #1c6b48;}
+.badge.warn{background:var(--warn-soft); color:#ffa3a9; border:1px solid #6b262c;}
+.badge.info{background:var(--info-soft); color:var(--info); border:1px solid #1f5c7d;}
 video,canvas{width:100%; border-radius:12px; background:#000;}
 .cam-wrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line); box-shadow:var(--shadow);}
 .cam-frame{position:absolute; inset:12%; border:2px dashed rgba(255,255,255,.35); border-radius:50%; pointer-events:none;}
@@ -101,6 +101,8 @@ select[multiple]{height:auto;}
 .close-x{position:absolute; top:16px; right:16px; background:var(--panel2); border:1px solid var(--line); width:32px; height:32px; border-radius:50%; color:var(--muted); font-size:16px;}
 .modal-bg{position:fixed; inset:0; background:rgba(3,6,10,.72); display:flex; align-items:flex-end; justify-content:center; z-index:80; backdrop-filter:blur(2px);}
 .modal-bg .card{width:100%; max-width:480px; border-radius:20px 20px 0 0; max-height:88vh; overflow-y:auto; position:relative; margin:0; border-bottom:none;}
+.modal-foto{align-items:center; padding:20px;}
+.modal-foto .card{border-radius:20px; padding-top:16px; max-height:92vh; border-bottom:1px solid var(--line);}
 h2{font-size:17px; margin:0 0 4px; font-weight:800; letter-spacing:-.2px;}
 h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted-dim); margin:0 0 14px; font-weight:800;}
 
@@ -631,11 +633,11 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 </div>
 
 <!-- ===================== VISUALIZAR FOTO DO REGISTRO ===================== -->
-<div id="modalFotoRegistro" class="modal-bg hidden" onclick="if(event.target===this) fecharFotoRegistro()">
+<div id="modalFotoRegistro" class="modal-bg modal-foto hidden" onclick="if(event.target===this) fecharFotoRegistro()">
   <div class="card" style="max-width:380px; text-align:center;">
     <button class="close-x" onclick="fecharFotoRegistro()">✕</button>
     <h2>Foto do registro</h2>
-    <img id="fotoRegistroImg" src="" style="width:100%; border-radius:12px; margin-top:8px; object-fit:cover;">
+    <img id="fotoRegistroImg" src="" style="width:100%; border-radius:12px; margin-top:6px; object-fit:cover; display:block;">
     <p class="small" style="margin-top:10px;" id="fotoRegistroInfo">—</p>
   </div>
 </div>
@@ -1196,18 +1198,20 @@ async function abrirCaptura(){
 }
 
 function avaliarCerca(){
+  const cercaEl = document.getElementById('cercaStatus');
+  if(!currentUser){ if(cercaEl) cercaEl.innerHTML=''; dentroCerca=null; return; }
   const postoAlvo = postoSelecionadoId || currentUser.postoId;
   if(!currentGeo || !postoAlvo){
-    document.getElementById('cercaStatus').innerHTML = '<span class="badge info">sem posto vinculado</span>';
+    if(cercaEl) cercaEl.innerHTML = '<span class="badge info">sem posto vinculado</span>';
     dentroCerca = null;
     checarHabilitarBotao();
     return;
   }
   const posto = postosCache[postoAlvo];
-  if(!posto){ document.getElementById('cercaStatus').textContent='posto não encontrado'; checarHabilitarBotao(); return; }
+  if(!posto){ if(cercaEl) cercaEl.textContent='posto não encontrado'; checarHabilitarBotao(); return; }
   const dist = haversine(currentGeo.lat, currentGeo.lng, posto.lat, posto.lng);
   dentroCerca = dist <= posto.raio;
-  document.getElementById('cercaStatus').innerHTML = dentroCerca
+  if(cercaEl) cercaEl.innerHTML = dentroCerca
     ? `<span class="badge ok">dentro (${Math.round(dist)}m)</span>`
     : `<span class="badge warn">fora — ${Math.round(dist)}m do posto</span>`;
   checarHabilitarBotao();
@@ -1449,54 +1453,60 @@ function carregarRelatorio(){
 function exportarExcel(){
   const linhas = window._ultimoRelatorio||[];
   if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
-  const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'';
-  const dados = linhas.map(l=>{
-    const {trabalhadoMs} = calcularHorasDia(l.tipos);
-    return {
-      Data: l.data.toLocaleDateString('pt-BR'),
-      Colaborador: l.colaboradorNome,
-      Posto: postosCache[l.postoId]?.nome || '—',
-      Entrada: hf(l.tipos.entrada),
-      Saida: hf(l.tipos.saida),
-      Duracao: (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '',
-      Localizacao: l.lat!=null ? `${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}` : '',
-      ForaCerca: l.foraCerca ? 'SIM' : 'NAO'
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(dados);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Historico');
-  XLSX.writeFile(wb, 'historico_ponto.xlsx');
+  if(typeof XLSX==='undefined'){ toast('Biblioteca de Excel não carregou. Verifique sua conexão.'); return; }
+  try{
+    const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'';
+    const dados = linhas.map(l=>{
+      const {trabalhadoMs} = calcularHorasDia(l.tipos);
+      return {
+        Data: l.data.toLocaleDateString('pt-BR'),
+        Colaborador: l.colaboradorNome,
+        Posto: postosCache[l.postoId]?.nome || '—',
+        Entrada: hf(l.tipos.entrada),
+        Saida: hf(l.tipos.saida),
+        Duracao: (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '',
+        Localizacao: l.lat!=null ? `${l.lat.toFixed(5)}, ${l.lng.toFixed(5)}` : '',
+        ForaCerca: l.foraCerca ? 'SIM' : 'NAO'
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Historico');
+    XLSX.writeFile(wb, 'historico_ponto.xlsx');
+  }catch(e){ toast('Erro ao gerar Excel: ' + e.message); }
 }
 
 function exportarPDF(){
   const linhas = window._ultimoRelatorio||[];
   if(!linhas.length){ toast('Nada para exportar — aplique um filtro primeiro.'); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape'});
-  doc.setFontSize(14);
-  doc.text('PJ Tecnologia e Sistemas — Histórico de Ponto', 14, 16);
-  const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'—';
-  const body = linhas.map(l=>{
-    const {trabalhadoMs} = calcularHorasDia(l.tipos);
-    return [
-      l.data.toLocaleDateString('pt-BR'),
-      l.colaboradorNome,
-      postosCache[l.postoId]?.nome || '—',
-      hf(l.tipos.entrada),
-      hf(l.tipos.saida),
-      (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '—',
-      l.foraCerca ? 'Fora' : 'OK'
-    ];
-  });
-  doc.autoTable({
-    startY: 22,
-    head: [['Data','Colaborador','Posto','Entrada','Saída','Duração','Cerca']],
-    body,
-    styles:{fontSize:8},
-    headStyles:{fillColor:[13,56,120]}
-  });
-  doc.save('historico_ponto.pdf');
+  if(typeof window.jspdf==='undefined'){ toast('Biblioteca de PDF não carregou. Verifique sua conexão.'); return; }
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape'});
+    doc.setFontSize(14);
+    doc.text('PJ Tecnologia e Sistemas — Histórico de Ponto', 14, 16);
+    const hf = ts=>ts?new Date(ts).toLocaleTimeString('pt-BR'):'—';
+    const body = linhas.map(l=>{
+      const {trabalhadoMs} = calcularHorasDia(l.tipos);
+      return [
+        l.data.toLocaleDateString('pt-BR'),
+        l.colaboradorNome,
+        postosCache[l.postoId]?.nome || '—',
+        hf(l.tipos.entrada),
+        hf(l.tipos.saida),
+        (l.tipos.entrada && l.tipos.saida) ? fmtHoras(trabalhadoMs) : '—',
+        l.foraCerca ? 'Fora' : 'OK'
+      ];
+    });
+    doc.autoTable({
+      startY: 22,
+      head: [['Data','Colaborador','Posto','Entrada','Saída','Duração','Cerca']],
+      body,
+      styles:{fontSize:8},
+      headStyles:{fillColor:[13,56,120]}
+    });
+    doc.save('historico_ponto.pdf');
+  }catch(e){ toast('Erro ao gerar PDF: ' + e.message); }
 }
 
 /* ============================================================
@@ -1518,6 +1528,7 @@ function fillPostoSelect(){
 }
 function onSelecionarPosto(){
   const sel = document.getElementById('colabPostoSelect');
+  if(!sel) return;
   postoSelecionadoId = sel.value || null;
   if(currentUser && currentUser.id) localStorage.setItem('pontoms_posto_'+currentUser.id, postoSelecionadoId||'');
   if(typeof avaliarCerca === 'function') avaliarCerca();
