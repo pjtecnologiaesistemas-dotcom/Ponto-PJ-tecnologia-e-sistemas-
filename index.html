@@ -203,8 +203,30 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .filtro-actions .btn-main{flex:0 0 auto; padding-left:20px; padding-right:20px;}
 .btn-pdf{background:#c0392b; border-color:#c0392b; color:#fff;}
 .btn-xls{background:#1b7a43; border-color:#1b7a43; color:#fff;}
-.loc-link{color:var(--info); text-decoration:none; font-size:12px;}
-.loc-link:hover{text-decoration:underline;}
+/* ── Aba "Bater Ponto" (admin/supervisor) ── */
+.bater-colab-list{display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px;}
+.bater-colab-item{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; background:var(--panel2); border:2px solid var(--line); cursor:pointer; transition:all .15s ease; position:relative; overflow:hidden;}
+.bater-colab-item:hover{border-color:var(--accent2);}
+.bater-colab-item.selected{border-color:var(--accent); background:rgba(245,158,11,.08); box-shadow:0 0 24px rgba(245,158,11,.15);}
+.bater-colab-item.status-on{border-left:4px solid var(--ok);}
+.bp-avatar,.bp-avatar-img{width:44px; height:44px; border-radius:12px; flex-shrink:0; object-fit:cover;}
+.bp-avatar{display:flex; align-items:center; justify-content:center; font-family:var(--font-head); font-weight:700; font-size:17px; color:#1a1206; background:linear-gradient(135deg,var(--accent2),var(--accent));}
+.bp-main{flex:1; min-width:0;}
+.bp-nome{font-weight:700; font-size:14.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.bp-sub{font-size:12px; color:var(--muted); margin-top:2px; font-family:var(--font-mono);}
+.btn-ponto{width:100%; border:none; border-radius:18px; cursor:pointer; padding:26px 20px; font-family:var(--font-head); font-size:22px; font-weight:700; color:#fff; display:flex; flex-direction:column; align-items:center; gap:8px; transition:transform .12s, box-shadow .2s; letter-spacing:.5px; text-transform:uppercase; margin-top:6px;}
+.btn-ponto:hover{transform:translateY(-2px);}
+.btn-ponto:active{transform:scale(.97);}
+.btn-ponto .bp-icon{font-size:38px; line-height:1;}
+.bp-entrada{background:linear-gradient(135deg,#053d1e,#16a34a); box-shadow:0 8px 30px -8px rgba(34,197,94,.5);}
+.bp-saida{background:linear-gradient(135deg,#420010,#c0203a); box-shadow:0 8px 30px -8px rgba(232,39,63,.5);}
+.bp-intervalo{background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#1a1206; box-shadow:0 8px 30px -8px rgba(245,158,11,.5);}
+@media (min-width:640px){
+  .bater-colab-list{grid-template-columns:1fr 1fr;}
+}
+@media (min-width:900px){
+  .bater-colab-list{grid-template-columns:1fr 1fr 1fr;}
+}
 .registro-item{padding:2px 0;}
 .registro-item:not(:last-child){border-bottom:1px solid var(--line-soft);}
 .registro-item .info-row{border-bottom:none; padding-bottom:4px;}
@@ -486,14 +508,31 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
   </div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="dash" onclick="switchTab('dash')">Dashboard</div>
+    <div class="tab active" data-tab="bater" onclick="switchTab('bater')">⏱️ Bater Ponto</div>
+    <div class="tab" data-tab="dash" onclick="switchTab('dash')">Dashboard</div>
     <div class="tab" data-tab="registros" onclick="switchTab('registros')">Registros</div>
     <div class="tab" data-tab="colab" onclick="switchTab('colab')">Colaboradores</div>
     <div class="tab" data-tab="postos" onclick="switchTab('postos')">Postos / Cerca virtual</div>
     <div class="tab" data-tab="config" onclick="switchTab('config')">Config. jornada</div>
   </div>
 
-  <div id="tabDash" class="tabcontent">
+  <div id="tabBater" class="tabcontent">
+    <div class="card">
+      <h3>👥 Selecionar colaborador</h3>
+      <input id="buscaBaterColab" placeholder="🔎 Buscar por nome..." oninput="renderBaterPontoLista()">
+      <div id="listaBaterColab" class="bater-colab-list"></div>
+    </div>
+    <div class="card hidden" id="painelBaterAcao">
+      <h3 id="baterColabNome">—</h3>
+      <p class="small" id="baterColabInfo">—</p>
+      <button class="btn-ponto" id="btnBaterAdminAcao" onclick="abrirCapturaAdmin()">
+        <span class="bp-icon" id="btnBaterAdminIcon">🕐</span>
+        <span id="btnBaterAdminLabel">Bater ponto</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="tabDash" class="tabcontent hidden">
     <div class="kpi">
       <div class="box kpi-info"><b id="kpiColab">0</b><span>Colaboradores</span></div>
       <div class="box kpi-accent"><b id="kpiHoje">0</b><span>Registros hoje</span></div>
@@ -663,6 +702,7 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
    FIREBASE
    ============================================================ */
 let db=null, currentUser=null, currentTipoBater=null, currentGeo=null, currentFoto=null, faceOk=false, dentroCerca=null, modelsLoaded=false;
+let alvoBaterAdmin=null, hojeRegistrosTodos={};
 let postosCache={}, colabCache={}, cfgJornada={jornada:8,tolerancia:10,noiteIni:'22:00',noiteFim:'05:00',pctExtra:50,pctNoturno:20};
 let postoSelecionadoId = null;
 
@@ -1015,7 +1055,7 @@ function enterApp(){
   document.getElementById('viewLogin').classList.add('hidden');
   if(currentUser.tipo==='admin'){
     document.getElementById('viewAdmin').classList.remove('hidden');
-    carregarDashboard();
+    carregarHojeTodos(renderBaterPontoLista);
   } else {
     document.getElementById('viewColab').classList.remove('hidden');
     document.getElementById('colabNome').textContent = currentUser.nome;
@@ -1045,8 +1085,11 @@ function tickClock(){
    REGISTROS DO COLABORADOR
    ============================================================ */
 const LABEL_TIPO = {entrada:'Entrada', intervalo_inicio:'Início do intervalo', intervalo_fim:'Fim do intervalo', saida:'Saída'};
+function ordemTiposFor(c){
+  return (c && c.usaIntervalo===false) ? ['entrada','saida'] : ['entrada','intervalo_inicio','intervalo_fim','saida'];
+}
 function ordemTiposColab(){
-  return (currentUser && currentUser.usaIntervalo===false) ? ['entrada','saida'] : ['entrada','intervalo_inicio','intervalo_fim','saida'];
+  return ordemTiposFor(currentUser);
 }
 
 function carregarRegistrosHoje(){
@@ -1215,8 +1258,9 @@ async function abrirCaptura(){
 
 function avaliarCerca(){
   const cercaEl = document.getElementById('cercaStatus');
-  if(!currentUser){ if(cercaEl) cercaEl.innerHTML=''; dentroCerca=null; return; }
-  const postoAlvo = postoSelecionadoId || currentUser.postoId;
+  const alvo = alvoBaterAdmin || currentUser;
+  if(!alvo){ if(cercaEl) cercaEl.innerHTML=''; dentroCerca=null; return; }
+  const postoAlvo = alvoBaterAdmin ? alvo.postoId : (postoSelecionadoId || alvo.postoId);
   if(!currentGeo || !postoAlvo){
     if(cercaEl) cercaEl.innerHTML = '<span class="badge info">sem posto vinculado</span>';
     dentroCerca = null;
@@ -1283,23 +1327,31 @@ async function confirmarRegistro(){
     canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
     currentFoto = canvas.toDataURL('image/jpeg',0.6);
   }
+  const alvo = alvoBaterAdmin || currentUser;
   const registro = {
-    colaboradorId: currentUser.id,
-    colaboradorNome: currentUser.nome,
+    colaboradorId: alvo.id,
+    colaboradorNome: alvo.nome,
     tipo: currentTipoBater,
     timestamp: Date.now(),
     lat: currentGeo?currentGeo.lat:null,
     lng: currentGeo?currentGeo.lng:null,
     precisaoM: currentGeo?Math.round(currentGeo.acc):null,
     dentroCerca: dentroCerca,
-    postoId: postoSelecionadoId || currentUser.postoId || null,
+    postoId: alvoBaterAdmin ? (alvo.postoId||null) : (postoSelecionadoId || alvo.postoId || null),
     foto: currentFoto
   };
   try{
     await db.ref('registros').push(registro);
     fecharCaptura();
-    toast('Ponto registrado: ' + (LABEL_TIPO[currentTipoBater]||currentTipoBater));
-    carregarRegistrosHoje();
+    toast('Ponto registrado: ' + (LABEL_TIPO[currentTipoBater]||currentTipoBater) + ' — ' + alvo.nome);
+    if(alvoBaterAdmin){
+      alvoBaterAdmin = null;
+      const painel = document.getElementById('painelBaterAcao');
+      if(painel) painel.classList.add('hidden');
+      carregarHojeTodos(renderBaterPontoLista);
+    } else {
+      carregarRegistrosHoje();
+    }
   }catch(e){
     document.getElementById('capturaErr').textContent = 'Falha ao salvar. Verifique a conexão.';
   }
@@ -1312,8 +1364,78 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
   document.querySelectorAll('.tabcontent').forEach(t=>t.classList.add('hidden'));
   document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).classList.remove('hidden');
+  if(name==='bater') carregarHojeTodos(renderBaterPontoLista);
   if(name==='dash') carregarDashboard();
   if(name==='registros') carregarRelatorio();
+}
+
+function carregarHojeTodos(cb){
+  if(!db){ if(cb) cb(); return; }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  db.ref('registros').orderByChild('timestamp').startAt(hoje.getTime()).once('value').then(snap=>{
+    hojeRegistrosTodos = {};
+    Object.values(snap.val()||{}).forEach(r=>{
+      if(!hojeRegistrosTodos[r.colaboradorId]) hojeRegistrosTodos[r.colaboradorId] = [];
+      hojeRegistrosTodos[r.colaboradorId].push(r);
+    });
+    Object.values(hojeRegistrosTodos).forEach(arr=>arr.sort((a,b)=>a.timestamp-b.timestamp));
+    if(cb) cb();
+  });
+}
+
+function renderBaterPontoLista(){
+  const el = document.getElementById('listaBaterColab');
+  if(!el) return;
+  const busca = (document.getElementById('buscaBaterColab')?.value||'').trim().toLowerCase();
+  const entries = Object.entries(colabCache)
+    .filter(([id,c])=>!busca || (c.nome||'').toLowerCase().includes(busca))
+    .sort((a,b)=>(a[1].nome||'').localeCompare(b[1].nome||''));
+  el.innerHTML = entries.map(([id,c])=>{
+    const arr = hojeRegistrosTodos[id]||[];
+    const ordem = ordemTiposFor(c);
+    const proximo = ordem[arr.length % ordem.length];
+    const emExpediente = arr.length>0 && (arr.length % ordem.length)!==0;
+    const iniciais = (c.nome||'?').trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+    const avatar = c.foto ? `<img class="bp-avatar-img" src="${c.foto}">` : `<div class="bp-avatar">${iniciais||'?'}</div>`;
+    const sel = alvoBaterAdmin && alvoBaterAdmin.id===id ? 'selected' : '';
+    const badgeCls = proximo==='saida' ? 'warn' : (proximo==='entrada' ? 'ok' : 'info');
+    return `<div class="bater-colab-item ${sel} ${emExpediente?'status-on':''}" onclick="selecionarBaterColab('${id}')">
+        ${avatar}
+        <div class="bp-main">
+          <div class="bp-nome">${c.nome}</div>
+          <div class="bp-sub">${postosCache[c.postoId]?.nome || c.cargo || 'sem posto'}</div>
+        </div>
+        <span class="badge ${badgeCls}">${LABEL_TIPO[proximo]||proximo}</span>
+      </div>`;
+  }).join('') || '<p class="small" style="margin-top:14px;">Nenhum colaborador encontrado.</p>';
+}
+
+function selecionarBaterColab(id){
+  const c = colabCache[id];
+  if(!c) return;
+  alvoBaterAdmin = {id, ...c};
+  renderBaterPontoLista();
+
+  const arr = hojeRegistrosTodos[id]||[];
+  const ordem = ordemTiposFor(c);
+  const proximo = ordem[arr.length % ordem.length];
+  currentTipoBater = proximo;
+
+  document.getElementById('painelBaterAcao').classList.remove('hidden');
+  document.getElementById('baterColabNome').textContent = c.nome;
+  document.getElementById('baterColabInfo').textContent = (postosCache[c.postoId]?.nome || 'sem posto vinculado') + ' · próximo registro: ' + (LABEL_TIPO[proximo]||proximo);
+
+  const btn = document.getElementById('btnBaterAdminAcao');
+  const icone = proximo==='entrada' ? '➡️' : proximo==='saida' ? '🏁' : '☕';
+  const classeCor = proximo==='entrada' ? 'bp-entrada' : proximo==='saida' ? 'bp-saida' : 'bp-intervalo';
+  btn.className = 'btn-ponto ' + classeCor;
+  document.getElementById('btnBaterAdminIcon').textContent = icone;
+  document.getElementById('btnBaterAdminLabel').textContent = LABEL_TIPO[proximo]||proximo;
+}
+
+function abrirCapturaAdmin(){
+  if(!alvoBaterAdmin) return;
+  abrirCaptura();
 }
 
 function carregarDashboard(){
