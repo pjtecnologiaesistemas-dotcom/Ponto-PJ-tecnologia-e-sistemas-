@@ -182,6 +182,22 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 .loc-line a{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--info); text-decoration:none; line-height:1.4;}
 .loc-line a:hover{text-decoration:underline;}
 .loc-line .loc-text{color:var(--muted);}
+
+/* ── Atividade recente: lista em mobile, tabela em laptop/desktop ── */
+.recent-table-wrap{display:none;}
+.activity-list{display:flex; flex-direction:column;}
+.activity-item{display:flex; align-items:center; gap:12px; padding:12px 2px;}
+.activity-item:not(:last-child){border-bottom:1px solid var(--line-soft);}
+.activity-item .ai-avatar{width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; background:var(--bg2); border:1px solid var(--line); cursor:pointer;}
+.activity-item .ai-avatar-empty{width:42px; height:42px; border-radius:50%; background:var(--bg2); border:1px solid var(--line); flex-shrink:0;}
+.activity-item .ai-main{flex:1; min-width:0;}
+.activity-item .ai-name{font-weight:700; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.activity-item .ai-sub{font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.activity-item .ai-sub .ai-hora{color:var(--muted-dim);}
+@media (min-width:900px){
+  .recent-table-wrap{display:block;}
+  .activity-list{display:none;}
+}
 </style>
 </head>
 <body>
@@ -454,9 +470,10 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
     </div>
     <div class="card">
       <h3>Atividade recente</h3>
-      <div class="table-scroll">
+      <div class="table-scroll recent-table-wrap">
         <table id="tblRecente"><thead><tr><th>Colaborador</th><th>Tipo</th><th>Hora</th><th>Cerca</th><th>Foto</th></tr></thead><tbody></tbody></table>
       </div>
+      <div id="listRecente" class="activity-list"></div>
     </div>
   </div>
 
@@ -1245,6 +1262,22 @@ function carregarDashboard(){
         <td>${r.dentroCerca===false?'<span class="badge warn">fora</span>':r.dentroCerca===true?'<span class="badge ok">ok</span>':'—'}</td>
         <td>${r.foto?`<img src="${r.foto}" onclick="abrirFotoRegistro('${r.foto}','${(r.colaboradorNome||'').replace(/'/g,"")}','${new Date(r.timestamp).toLocaleString('pt-BR')}')" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;display:block;">`:'—'}</td>
       </tr>`).join('') || '<tr><td colspan="5" class="small">Sem registros.</td></tr>';
+
+    document.getElementById('listRecente').innerHTML = recentes.map(r=>{
+      const nomeEsc = (r.colaboradorNome||'').replace(/'/g,"");
+      const dataStr = new Date(r.timestamp).toLocaleString('pt-BR');
+      const cerca = r.dentroCerca===false?'<span class="badge warn">fora</span>':r.dentroCerca===true?'<span class="badge ok">ok</span>':'';
+      const avatar = r.foto
+        ? `<img class="ai-avatar" src="${r.foto}" onclick="abrirFotoRegistro('${r.foto}','${nomeEsc}','${dataStr}')">`
+        : `<div class="ai-avatar-empty"></div>`;
+      return `<div class="activity-item">
+          ${avatar}
+          <div class="ai-main">
+            <div class="ai-name">${r.colaboradorNome||'—'}</div>
+            <div class="ai-sub"><span>${LABEL_TIPO[r.tipo]||r.tipo}</span><span class="ai-hora">· ${dataStr}</span>${cerca}</div>
+          </div>
+        </div>`;
+    }).join('') || '<p class="small">Sem registros.</p>';
 
     // horas extras do mês (soma simples)
     const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
