@@ -161,8 +161,9 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 @media (min-width:900px){
   .wrap{max-width:720px;}
   .wrap.wide{max-width:1180px;}
-  .card-grid.cols-2{display:grid; grid-template-columns:1fr 1fr; align-items:start;}
-  .card-grid.cols-3{display:grid; grid-template-columns:repeat(3,1fr); align-items:start;}
+  .card-grid.cols-2{display:grid; grid-template-columns:1fr 1fr; align-items:stretch;}
+  .card-grid.cols-3{display:grid; grid-template-columns:repeat(3,1fr); align-items:stretch;}
+  .card-grid > .card{height:100%; display:flex; flex-direction:column;}
   .modal-bg{align-items:center; padding:24px;}
   .modal-bg .card{border-radius:20px; max-height:85vh;}
 }
@@ -172,6 +173,15 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
 @media (min-width:1400px){
   .wrap.wide{max-width:1320px;}
 }
+
+/* ── Localização do registro (entrada / saída) ── */
+.registro-item{padding:2px 0;}
+.registro-item:not(:last-child){border-bottom:1px solid var(--line-soft);}
+.registro-item .info-row{border-bottom:none; padding-bottom:4px;}
+.loc-line{padding:0 0 11px; margin-top:-4px;}
+.loc-line a{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--info); text-decoration:none; line-height:1.4;}
+.loc-line a:hover{text-decoration:underline;}
+.loc-line .loc-text{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -975,11 +985,48 @@ function carregarRegistrosHoje(){
 function renderRegistrosHoje(arr){
   const el = document.getElementById('registrosHoje');
   if(!arr.length){ el.innerHTML = '<p class="small">Nenhum registro ainda.</p>'; return; }
-  el.innerHTML = arr.map(r=>{
+  el.innerHTML = arr.map((r,i)=>{
     const hora = new Date(r.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    const badge = r.dentroCerca ? '<span class="badge ok">na área</span>' : '<span class="badge warn">fora da área</span>';
-    return `<div class="info-row"><span>${LABEL_TIPO[r.tipo]||r.tipo}</span><span>${hora} ${badge}</span></div>`;
+    const badge = r.dentroCerca===true ? '<span class="badge ok">na área</span>' : (r.dentroCerca===false ? '<span class="badge warn">fora da área</span>' : '');
+    const mostrarLocal = (r.tipo==='entrada' || r.tipo==='saida') && r.lat!=null && r.lng!=null;
+    const locId = `loc_${r.tipo}_${i}`;
+    const locHtml = mostrarLocal ? `
+      <div class="loc-line" id="${locId}">
+        <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener">📍 <span class="loc-text">Localizando endereço…</span></a>
+      </div>` : '';
+    return `<div class="registro-item">
+        <div class="info-row"><span>${LABEL_TIPO[r.tipo]||r.tipo}</span><span>${hora} ${badge}</span></div>
+        ${locHtml}
+      </div>`;
   }).join('');
+  arr.forEach((r,i)=>{
+    if((r.tipo==='entrada' || r.tipo==='saida') && r.lat!=null && r.lng!=null){
+      reverseGeocode(r.lat, r.lng, `loc_${r.tipo}_${i}`);
+    }
+  });
+}
+
+const geocodeCache = {};
+async function reverseGeocode(lat, lng, elId){
+  const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+  const alvo = document.getElementById(elId);
+  if(!alvo) return;
+  const span = alvo.querySelector('.loc-text');
+  if(geocodeCache[key]){ if(span) span.textContent = geocodeCache[key]; return; }
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17&addressdetails=1`, {headers:{'Accept-Language':'pt-BR'}});
+    const data = await res.json();
+    const a = data.address || {};
+    const partes = [a.road, a.suburb || a.neighbourhood, a.city || a.town || a.village].filter(Boolean);
+    const texto = partes.length ? partes.join(', ') : (data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    geocodeCache[key] = texto;
+    if(document.getElementById(elId)){
+      const span2 = document.getElementById(elId).querySelector('.loc-text');
+      if(span2) span2.textContent = texto;
+    }
+  }catch(e){
+    if(span) span.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
 }
 
 function calcularBancoMes(){
