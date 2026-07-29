@@ -52,7 +52,8 @@ body::before{
 .hidden{display:none !important;}
 h2,h3{font-family:var(--font-head); letter-spacing:.5px;}
 label{display:block; font-size:11px; color:var(--accent); margin:14px 0 7px; text-transform:uppercase; letter-spacing:1.2px; font-weight:700; font-family:var(--font-mono);}
-input,select{width:100%; padding:13px 14px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--bg2); color:var(--text); font-size:15px; transition:border-color .15s ease, box-shadow .15s ease;}
+input:not([type=checkbox]):not([type=radio]),select{width:100%; padding:13px 14px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--bg2); color:var(--text); font-size:15px; transition:border-color .15s ease, box-shadow .15s ease;}
+input[type=checkbox],input[type=radio]{width:auto; accent-color:var(--accent);}
 input::placeholder{color:var(--muted-dim);}
 input:focus,select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,.18);}
 button{cursor:pointer; border:none; border-radius:var(--radius-sm); font-weight:700; font-size:14px; letter-spacing:.2px; transition:transform .08s ease, filter .15s ease, box-shadow .15s ease; font-family:var(--font-head);}
@@ -627,6 +628,10 @@ h3{font-size:12px; text-transform:uppercase; letter-spacing:.7px; color:var(--mu
         </div>
         <div style="grid-column:1/3;"><label>Endereço</label><input id="novoEndereco" placeholder="Rua, número, bairro, cidade"></div>
         <div style="grid-column:1/3;"><label>Posto</label><select id="novoPosto"></select></div>
+        <div style="grid-column:1/3; display:flex; align-items:center; gap:10px; margin-top:14px; padding:12px 14px; background:var(--bg2); border:1px solid var(--line); border-radius:var(--radius-sm);">
+          <input type="checkbox" id="novoIsAdmin" style="width:18px; height:18px; flex-shrink:0;">
+          <label for="novoIsAdmin" style="margin:0; text-transform:none; letter-spacing:0; font-size:13px; color:var(--text); font-family:'Noto Sans',sans-serif; font-weight:600; cursor:pointer;">Este colaborador também é administrador do sistema (acessa o Painel Administrativo com a mesma matrícula e senha)</label>
+        </div>
       </div>
       <button class="btn-main" id="btnSalvarColab" onclick="criarColaborador()">Cadastrar</button>
       <button class="btn-ghost hidden" id="btnCancelarEdicaoColab" onclick="cancelarEdicaoColab()">Cancelar edição</button>
@@ -908,6 +913,12 @@ function doLogin(){
     const c = val[id];
     if(c.senha !== senha){ errEl.textContent='Senha incorreta.'; return; }
     if(c.senhaTemporaria){ exigirNovaSenha(id, c); return; }
+    if(c.isAdmin){
+      currentUser = {tipo:'admin', nome:c.nome, colaboradorId:id};
+      localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
+      enterApp();
+      return;
+    }
     currentUser = {tipo:'colaborador', id, ...c};
     localStorage.setItem('pontoms_user', JSON.stringify(currentUser));
     enterApp();
@@ -1246,12 +1257,22 @@ async function abrirCaptura(){
   try{
     camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
     document.getElementById('camVideo').srcObject = camStream;
-    document.getElementById('camStatus').textContent = 'Carregando verificação facial…';
-    await loadFaceModels();
-    detectarRostoLoop();
   }catch(e){
     document.getElementById('camStatus').textContent = 'Câmera indisponível — registro seguirá sem foto.';
     faceOk = true; // não trava o registro se não houver câmera
+    checarHabilitarBotao();
+    return;
+  }
+
+  // Verificação facial (opcional — se o modelo não carregar, a foto ainda é capturada normalmente)
+  document.getElementById('camStatus').textContent = 'Carregando verificação facial…';
+  try{
+    await loadFaceModels();
+    detectarRostoLoop();
+  }catch(e){
+    document.getElementById('camStatus').textContent = 'Verificação facial indisponível — a foto será registrada normalmente.';
+    document.getElementById('faceStatus').innerHTML = '<span class="badge info">não disponível</span>';
+    faceOk = true;
     checarHabilitarBotao();
   }
 }
@@ -1731,6 +1752,7 @@ function criarColaborador(){
   const telefone = document.getElementById('novoTelefone').value.trim();
   const endereco = document.getElementById('novoEndereco').value.trim();
   const estadoCivil = document.getElementById('novoEstadoCivil').value;
+  const isAdmin = document.getElementById('novoIsAdmin').checked;
   const foto = colabFotoData || null;
   const errEl = document.getElementById('colabErr');
 
@@ -1739,7 +1761,7 @@ function criarColaborador(){
     const existente = colabCache[editandoColabId] || {};
     const senhaFinal = senha ? senha : (existente.senha || '');
     const senhaTemporaria = senha ? false : (existente.senhaTemporaria || false);
-    db.ref('colaboradores/'+editandoColabId).set({...existente, nome,matricula,senha:senhaFinal,senhaTemporaria,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
+    db.ref('colaboradores/'+editandoColabId).set({...existente, nome,matricula,senha:senhaFinal,senhaTemporaria,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil,isAdmin}).then(()=>{
       errEl.textContent='';
       toast('Colaborador atualizado.');
       cancelarEdicaoColab();
@@ -1748,11 +1770,12 @@ function criarColaborador(){
   }
 
   if(!nome||!matricula||!senha){ errEl.textContent='Preencha nome, matrícula e senha.'; return; }
-  db.ref('colaboradores').push({nome,matricula,senha,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil}).then(()=>{
+  db.ref('colaboradores').push({nome,matricula,senha,cargo,usaIntervalo,postoId,foto,telefone,endereco,estadoCivil,isAdmin}).then(()=>{
     errEl.textContent='';
     ['novoNome','novoMat','novoSenha','novoCargo','novoTelefone','novoEndereco'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('novoEstadoCivil').value='';
     document.getElementById('novoUsaIntervalo').value='sim';
+    document.getElementById('novoIsAdmin').checked=false;
     colabFotoData = null;
     renderColabFotoPreview();
     toast('Colaborador cadastrado.');
@@ -1772,6 +1795,7 @@ function editarColaborador(id){
   document.getElementById('novoTelefone').value = c.telefone||'';
   document.getElementById('novoEndereco').value = c.endereco||'';
   document.getElementById('novoEstadoCivil').value = c.estadoCivil||'';
+  document.getElementById('novoIsAdmin').checked = !!c.isAdmin;
   colabFotoData = c.foto || null;
   renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Editando: ' + c.nome;
@@ -1786,6 +1810,7 @@ function cancelarEdicaoColab(){
   ['novoNome','novoMat','novoSenha','novoCargo','novoTelefone','novoEndereco'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('novoPosto').value='';
   document.getElementById('novoEstadoCivil').value='';
+  document.getElementById('novoIsAdmin').checked=false;
   colabFotoData = null;
   renderColabFotoPreview();
   document.getElementById('colabFormTitulo').textContent = 'Novo colaborador';
@@ -1798,7 +1823,7 @@ function renderColabTable(){
   tb.querySelector('tbody').innerHTML = Object.entries(colabCache).map(([id,c])=>`
     <tr>
       <td>${c.foto?`<img src="${c.foto}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;display:block;">`:'<span class="small">—</span>'}</td>
-      <td>${c.nome}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
+      <td>${c.nome}${c.isAdmin?' <span class="badge warn" style="vertical-align:middle;">admin</span>':''}</td><td>${c.matricula}</td><td>${c.cargo||'—'}</td>
       <td>${postosCache[c.postoId]?.nome||'—'}</td>
       <td>${c.usaIntervalo===false?'<span class="badge info">não</span>':'<span class="badge ok">sim</span>'}</td>
       <td class="flex">
